@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Posture Pro - Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="form-screen">
+        <div class="form-container">
+            <h2>Анализ осанки</h2>
+            <div class="input-group">
+                <input type="number" id="user-age" placeholder="Возраст" inputmode="numeric" min="1" max="120" required>
+                <div class="field-error" id="age-error" aria-live="polite"></div>
+
+                <input type="number" id="user-weight" placeholder="Вес (кг)" inputmode="numeric" min="20" max="300" required>
+                <div class="field-error" id="weight-error" aria-live="polite"></div>
+
+                <input type="number" id="user-height" placeholder="Рост (см)" inputmode="numeric" min="50" max="250" required>
+                <div class="field-error" id="height-error" aria-live="polite"></div>
+
+                <div class="gender-toggle">
+                    <input type="radio" id="gender-male" name="gender" value="male" checked>
+                    <label for="gender-male">Муж.</label>
+
+                    <input type="radio" id="gender-female" name="gender" value="female">
+                    <label for="gender-female">Жен.</label>
+                </div>
+            </div>
+
+            <label class="helper-switch">
+                <div class="helper-switch-text">
+                    <strong>Снимаю с помощником</strong>
+                    <span>Добавит 4-й ракурс со спины</span>
+                </div>
+                <input type="checkbox" id="has-helper">
+                <span class="slider"></span>
+            </label>
+            <button id="to-camera-btn">НАЧАТЬ</button>
+        </div>
+    </div>
+
+    <div id="camera-screen" style="display:none;">
+        <video id="camera-feed" autoplay playsinline muted></video>
+        <div id="step-indicator">Шаг 1: Вид спереди</div>
+        <div id="hud-container">
+            <div class="guide-head"></div>
+            <div class="spine-guide"></div>
+            <div id="moving-horizon"></div>
+            <div class="guide-feet"></div>
+        </div>
+        
+        <div id="status">Выровняйте телефон</div>
+
+        <div id="controls-bar">
+            <button id="gallery-btn" class="side-btn"></button>
+            <div id="capture-area">
+                <div id="zoom-indicator">Зум 1.0x</div>
+                <button id="capture-btn" disabled></button>
+            </div>
+            <button id="switch-cam-btn" class="side-btn"></button>
+        </div>
+    </div>
+    <div id="preview-screen" style="display: none;">
+        <img id="preview-image">
+        <div class="preview-controls">
+            <button id="retake-btn" class="action-btn secondary-btn">Переснять</button>
+            <button id="next-step-btn" class="action-btn primary-btn">Дальше</button>
+        </div>
+    </div>
+
+    <div id="sending-screen" style="display: none;">
+        <div class="sending-card">
+            <h2 id="sending-title">Фотографии отправлены на анализ</h2>
+            <p id="sending-message">
+                Снимки переданы в систему анализа для оценки Вашей осанки.
+                Рекомендуемый список упражнений, утвержденный специалистом,
+                будет возвращён Вам с помощью бота. Пожалуйта, ожидайте ответ в боте. 
+            </p>
+            <!-- countdown handled in script; summary and exercises are not shown in-web -->
+            <button id="ok-btn" class="action-btn primary-btn" style="display:none;">OK</button>
+        </div>
+    </div>
+
+    <canvas id="capture-canvas" style="display:none;"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
