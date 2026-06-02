@@ -1,3 +1,5 @@
+"""Posture-analysis helpers built around Vertex AI Gemini responses."""
+
 import vertexai
 from vertexai.generative_models import GenerativeModel
 
@@ -40,14 +42,17 @@ vertexai.init(project=_PROJECT, location=_LOCATION)
 
 
 def _load_text(path: Path) -> str:
+    """Read UTF-8 text from a file path."""
     return path.read_text(encoding="utf-8")
 
 
 def _normalize_text(value: str) -> str:
+    """Normalize text for case-insensitive name matching."""
     return re.sub(r"\s+", " ", value).strip().lower()
 
 
 def _extract_exercise_names(exercises_text: str) -> list[str]:
+    """Extract exercise names from the reference markdown file."""
     names = re.findall(r"^###\s+\d+\.\s+(.+)$", exercises_text, flags=re.MULTILINE)
     if not names:
         raise ValueError("No exercises found in excercises.md")
@@ -55,6 +60,7 @@ def _extract_exercise_names(exercises_text: str) -> list[str]:
 
 
 def _build_patient_block(patient_data: Mapping[str, Any] | None) -> str:
+    """Format patient metadata for inclusion in the model prompt."""
     patient_data = patient_data or {}
     photo_count = int(patient_data.get('photo_count') or 3)
     helper_note = "- Фото 4: вид со спины (с помощником)" if photo_count >= 4 else ""
@@ -75,6 +81,7 @@ def _build_patient_block(patient_data: Mapping[str, Any] | None) -> str:
 
 
 def _build_request_text(patient_data: Mapping[str, Any] | None, exercises_text: str) -> str:
+    """Construct the full prompt sent to the model."""
     base_prompt = _load_text(PROMPT_PATH)
     patient_block = _build_patient_block(patient_data)
     return textwrap.dedent(
@@ -121,6 +128,7 @@ def _build_request_text(patient_data: Mapping[str, Any] | None, exercises_text: 
 
 
 def _strip_json_fences(text: str) -> str:
+    """Remove markdown fences and return the JSON payload substring."""
     cleaned = text.strip()
     if cleaned.startswith("```"):
         cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
@@ -133,6 +141,7 @@ def _strip_json_fences(text: str) -> str:
 
 
 def _coerce_recommendations(payload: Mapping[str, Any], allowed_names: Sequence[str]) -> dict[str, Any]:
+    """Filter model recommendations down to five allowed exercise names."""
     allowed_lookup = {_normalize_text(name): name for name in allowed_names}
 
     recommendations = payload.get("recommended_exercises")

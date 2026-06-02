@@ -60,8 +60,8 @@ def send_welcome(message):
     user_id = message.from_user.id
     first_name = message.from_user.first_name
 
-    # Генерируем зашифрованный токен (живет 1 час)
-    secure_token = encode_token(user_id, lifetime_sec=3600)
+    # Генерируем зашифрованный токен (живет до закрытия сессии)
+    secure_token = encode_token(user_id)
     register_token(user_id, secure_token)
     
     # Формируем ссылку с ID пользователя для идентификации на сервере

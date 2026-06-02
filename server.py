@@ -1,3 +1,5 @@
+"""Flask entrypoint for posture analysis uploads, sessions, and PDF delivery."""
+
 from flask import Flask, request, jsonify, send_from_directory, abort
 import base64
 import os
@@ -5,7 +7,13 @@ import json
 import logging
 import traceback
 from datetime import datetime
-from analyze import analyze_posture_gemini
+try:
+    from analyze import analyze_posture_gemini
+except Exception:
+    # analysis backend is optional for endpoint testing; provide a stub
+    def analyze_posture_gemini(images=None, patient_data=None):
+        raise RuntimeError('analysis backend not available in test environment')
+
 from service import generate_pdf_from_analysis, deliver_pdf_to_telegram
 from security import decode_token, claim_token, restore_session, validate_session
 
@@ -24,17 +32,48 @@ os.makedirs(RESULTS_FOLDER, exist_ok=True)
 # Раздача фронтенда
 @app.route('/')
 def index():
+    """Serve the main client application."""
     return send_from_directory('.', 'index.html')
 
 
 @app.route('/session/claim', methods=['POST'])
 def claim_session():
+    """Claim a Telegram token for the current client session."""
     data = request.json or {}
     token = data.get('token')
     client_id = data.get('client_id')
     if not token:
         return jsonify({'status': 'error', 'message': 'No token provided'}), 400
 
+    # If the token decodes but was already claimed, and it was claimed by the same
+    # client_id, return the existing session instead of erroring out. This prevents
+    # creating multiple sessions when the user reopens the camera in another
+    # window/tab for the same device.
+    from security import load_session_registry
+    try:
+        # Decode token to obtain user_id for registry lookup
+        user_id_decoded, _ = decode_token(token)
+    except Exception:
+        user_id_decoded = None
+
+    if user_id_decoded:
+        registry = load_session_registry()
+        entry = registry.get(str(user_id_decoded)) if isinstance(registry, dict) else None
+        if isinstance(entry, dict) and entry.get('claimed') and entry.get('session_id'):
+            # If token belongs to a user who already has a claimed session, prefer
+            # returning that existing session instead of creating a new one.
+            # If the client_id differs, update it to reflect the current client.
+            if client_id and entry.get('client_id') != client_id:
+                entry['client_id'] = client_id
+                registry[str(user_id_decoded)] = entry
+                try:
+                    from security import save_session_registry
+                    save_session_registry(registry)
+                except Exception:
+                    pass
+            return jsonify({'status': 'success', 'user_id': user_id_decoded, 'session_id': entry.get('session_id')})
+
+    # Not claimed yet: attempt to claim normally.
     user_id, session_id = claim_token(token, client_id=client_id)
     if not user_id or not session_id:
         return jsonify({'status': 'error', 'message': 'Token already used or invalid. Request a new Telegram link.'}), 403
@@ -44,6 +83,7 @@ def claim_session():
 
 @app.route('/session/restore', methods=['POST'])
 def restore_existing_session():
+    """Restore an existing session for a remembered client id."""
     data = request.json or {}
     client_id = data.get('client_id')
     if not client_id:
@@ -55,14 +95,61 @@ def restore_existing_session():
 
     return jsonify({'status': 'success', 'user_id': user_id, 'session_id': session_id})
 
+
+@app.route('/session/close', methods=['POST'])
+def close_session():
+    """Close a claimed session by session_id or client_id and remove it from the registry."""
+    data = request.json or {}
+    session_id = data.get('session_id')
+    client_id = data.get('client_id')
+
+    closed = False
+    from security import close_session_by_session_id, close_session_by_client_id
+
+    logger.info('session/close called with session_id=%s client_id=%s', session_id, client_id)
+    if session_id:
+        closed = close_session_by_session_id(session_id)
+    elif client_id:
+        closed = close_session_by_client_id(client_id)
+    else:
+        return jsonify({'status': 'error', 'message': 'No session_id or client_id provided'}), 400
+
+    if closed:
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error', 'message': 'Session not found or already closed'}), 404
+
 # Раздача CSS и JS
 @app.route('/<path:path>')
 def static_files(path): 
+    """Serve static files from the project root."""
     return send_from_directory('.', path)
+
+
+@app.route('/debug/log', methods=['POST'])
+def debug_log():
+    """Receive debug logs from clients and append them to a server-side file.
+
+    This helps debugging issues when users can't open DevTools on their device.
+    """
+    data = request.json or {}
+    client_id = data.get('client_id')
+    session_id = data.get('session_id')
+    event = data.get('event')
+    payload = data.get('payload')
+    ts = datetime.now().isoformat()
+    try:
+        fname = os.path.join(RESULTS_FOLDER, 'client_debug_logs.txt')
+        with open(fname, 'a', encoding='utf-8') as f:
+            entry = {'ts': ts, 'client_id': client_id, 'session_id': session_id, 'event': event, 'payload': payload}
+            f.write(json.dumps(entry, ensure_ascii=False) + '\n')
+    except Exception as e:
+        logger.warning('Failed to write debug log: %s', e)
+    return jsonify({'status': 'ok'})
 
 # ПРИЕМНИК: АНКЕТА + ФОТО
 @app.route('/upload', methods=['POST'])
 def upload():
+    """Receive form data and photos, run analysis, and save the report."""
     data = request.json
     if not data:
         logger.warning('Upload request received without JSON body')

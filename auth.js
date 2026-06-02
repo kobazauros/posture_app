@@ -1,0 +1,173 @@
+import {
+    CLIENT_STORAGE_KEY,
+    SESSION_STORAGE_KEY,
+    TOKEN_STORAGE_KEY,
+    state,
+    url,
+} from './state.js';
+
+/**
+ * Reads a cookie value by name.
+ * @param {string} name - Cookie name.
+ * @returns {string|null} The decoded cookie value, or null when missing.
+ */
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * Writes a cookie value with the provided max-age.
+ * @param {string} name - Cookie name.
+ * @param {string} value - Cookie value.
+ * @param {number} maxAgeSeconds - Cookie lifetime in seconds.
+ */
+function setCookie(name, value, maxAgeSeconds) {
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`;
+}
+
+/**
+ * Returns the current client id, creating and persisting one when needed.
+ * @returns {string} Stable client identifier.
+ */
+export function getOrCreateClientId() {
+    try {
+        const existingClientId = getCookie(CLIENT_STORAGE_KEY) || localStorage.getItem(CLIENT_STORAGE_KEY);
+        if (existingClientId) {
+            try {
+                localStorage.setItem(CLIENT_STORAGE_KEY, existingClientId);
+            } catch (err) {
+                console.warn('[auth] unable to mirror client id into localStorage', err);
+            }
+            state.clientId = existingClientId;
+            return existingClientId;
+        }
+
+        const nextClientId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+            ? window.crypto.randomUUID()
+            : `client_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+
+        setCookie(CLIENT_STORAGE_KEY, nextClientId, 60 * 60 * 24 * 365);
+        localStorage.setItem(CLIENT_STORAGE_KEY, nextClientId);
+        state.clientId = nextClientId;
+        return nextClientId;
+    } catch (err) {
+        console.warn('[auth] unable to persist client id', err);
+        const fallbackClientId = `client_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+        state.clientId = fallbackClientId;
+        return fallbackClientId;
+    }
+}
+
+/**
+ * Restores auth inputs from the URL or session storage.
+ * @returns {void}
+ */
+export function bootstrapAuthFromUrl() {
+    if (state.token) {
+        try {
+            sessionStorage.setItem(TOKEN_STORAGE_KEY, state.token);
+        } catch (err) {
+            console.warn('[auth] unable to persist token in sessionStorage', err);
+        }
+
+        url.searchParams.delete('t');
+        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        return;
+    }
+
+    try {
+        state.token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+        state.sessionId = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    } catch (err) {
+        console.warn('[auth] unable to read token from sessionStorage', err);
+        state.token = null;
+        state.sessionId = null;
+    }
+}
+
+/**
+ * Updates the start button to reflect auth readiness.
+ * @param {boolean} enabled - Unused flag kept for call-site clarity.
+ * @param {string} message - Button label to show.
+ * @returns {void}
+ */
+export function setAuthState(enabled, message) {
+    const startBtn = document.getElementById('to-camera-btn');
+    if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.style.display = 'block';
+        startBtn.textContent = message || 'НАЧАТЬ';
+    }
+}
+
+/**
+ * Restores or claims a backend session for the current client.
+ * @returns {Promise<boolean>} True when a session is available.
+ */
+export async function initializeAuthSession() {
+    if (state.sessionId) {
+        setAuthState(true, 'НАЧАТЬ');
+        return true;
+    }
+
+    // Proceed to attempt restore/claim for this client.
+
+    try {
+        const restoredResponse = await fetch('/session/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client_id: state.clientId }),
+        });
+        const restoredPayload = await restoredResponse.json().catch(() => ({}));
+
+        if (restoredResponse.ok && restoredPayload.session_id) {
+            state.sessionId = restoredPayload.session_id;
+            try {
+                sessionStorage.setItem(SESSION_STORAGE_KEY, state.sessionId);
+            } catch (err) {
+                console.warn('[auth] unable to persist restored session id', err);
+            }
+            setAuthState(true, 'НАЧАТЬ');
+            return true;
+        }
+    } catch (err) {
+        console.warn('[auth] session restore request failed', err);
+    }
+
+    if (!state.token) {
+        return false;
+    }
+
+    try {
+        const response = await fetch('/session/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: state.token, client_id: state.clientId }),
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.session_id) {
+            console.warn('[auth] session claim failed', payload);
+            return false;
+        }
+
+        state.sessionId = payload.session_id;
+        try {
+            sessionStorage.setItem(SESSION_STORAGE_KEY, state.sessionId);
+            sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+            setCookie(CLIENT_STORAGE_KEY, state.clientId, 60 * 60 * 24 * 365);
+        } catch (err) {
+            console.warn('[auth] unable to persist session id', err);
+        }
+
+        state.token = null;
+        url.searchParams.delete('t');
+        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        setAuthState(true, 'НАЧАТЬ');
+        return true;
+    } catch (err) {
+        console.warn('[auth] session claim request failed', err);
+        return false;
+    }
+}

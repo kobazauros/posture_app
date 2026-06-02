@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Service helpers: PDF generation and delivery utilities."""
+"""PDF report generation and Telegram delivery helpers for posture analysis."""
 
 import json
 import base64
@@ -9,15 +9,19 @@ from pathlib import Path
 from datetime import datetime
 from io import BytesIO
 
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm, mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib import colors
-from PIL import Image as PILImage
+try:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import cm, mm
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib import colors
+    from PIL import Image as PILImage
+    _HAS_REPORTLAB = True
+except Exception:
+    _HAS_REPORTLAB = False
 
 
 def _register_font_by_name(font_name: str):
@@ -177,6 +181,9 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
     if output_filename is None:
         output_filename = results_dir / f'{user_id}_{timestamp}_report.pdf'
     
+    if not _HAS_REPORTLAB:
+        raise RuntimeError('reportlab/PIL not available in test environment')
+
     # Get Cyrillic fonts (regular and bold)
     fonts = get_cyrillic_fonts()
     regular_font = fonts.get('regular', 'Helvetica')

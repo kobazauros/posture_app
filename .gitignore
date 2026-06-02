@@ -2,3 +2,4 @@ __pycache__/*
 received_photos/*
 results/*
 .env
+.venv/*
