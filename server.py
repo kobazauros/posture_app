@@ -205,6 +205,29 @@ def upload():
                 encoded = img_base64
             
             img_data = base64.b64decode(encoded)
+            
+            pitch = orientations[i].get('pitch') if i < len(orientations) and orientations[i] else None
+            roll = orientations[i].get('roll') if i < len(orientations) and orientations[i] else None
+            
+            if pitch is not None and roll is not None and (abs(pitch) > 0.5 or abs(roll) > 0.5):
+                try:
+                    import cv2
+                    import numpy as np
+                    from perspective_utils import correct_image_perspective, get_focal_length_from_exif
+                    np_arr = np.frombuffer(img_data, np.uint8)
+                    img_cv = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                    if img_cv is not None:
+                        h, w = img_cv.shape[:2]
+                        _, K = get_focal_length_from_exif("", w, h, fallback_35mm=26.0)
+                        corrected_cv = correct_image_perspective(img_cv, pitch, roll, K)
+                        
+                        success, buffer = cv2.imencode('.jpg', corrected_cv, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+                        if success:
+                            img_data = buffer.tobytes()
+                            images[i] = "data:image/jpeg;base64," + base64.b64encode(img_data).decode('utf-8')
+                except Exception as e:
+                    logger.warning("Failed to unwarp image: %s", e)
+            
             filename = f"{uid}_{ts}_photo_{i+1}.jpg"
             filepath = os.path.join(UPLOAD_FOLDER, filename)
             
@@ -226,7 +249,9 @@ def upload():
                         if "Exif" not in exif_dict or exif_dict["Exif"] is None:
                             exif_dict["Exif"] = {}
                             
-                        data_json = json.dumps({"pitch": pitch, "roll": roll})
+                        # Изображение уже выровнено, поэтому pitch=0, roll=0. 
+                        # Сохраним оригинальные углы для отладки.
+                        data_json = json.dumps({"pitch": 0.0, "roll": 0.0, "original_pitch": pitch, "original_roll": roll})
                         user_comment = b"ASCII\0\0\0" + data_json.encode('utf-8')
                         exif_dict["Exif"][piexif.ExifIFD.UserComment] = user_comment  # type: ignore
                         exif_bytes = piexif.dump(exif_dict)

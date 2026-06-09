@@ -4,6 +4,42 @@ from PIL import Image, ExifTags
 import json
 import re
 
+def correct_image_perspective(img, pitch_deg, roll_deg, K):
+    """
+    Применяет гомографию (Perspective Transform) к изображению,
+    чтобы "выровнять" его, компенсируя наклон камеры (pitch) и крен (roll).
+    Возвращает выровненное изображение.
+    """
+    h, w = img.shape[:2]
+    pitch_rad = np.radians(pitch_deg)
+    roll_rad = np.radians(roll_deg)
+    
+    # Строим матрицу вращения
+    R_x = np.array([
+        [1, 0, 0],
+        [0, np.cos(pitch_rad), -np.sin(pitch_rad)],
+        [0, np.sin(pitch_rad), np.cos(pitch_rad)]
+    ], dtype=np.float32)
+    
+    R_z = np.array([
+        [np.cos(roll_rad), -np.sin(roll_rad), 0],
+        [np.sin(roll_rad), np.cos(roll_rad), 0],
+        [0, 0, 1]
+    ], dtype=np.float32)
+    
+    R = R_z @ R_x
+    
+    # Гомография чистого вращения камеры: H = K * R^(-1) * K^(-1)
+    K_inv = np.linalg.inv(K)
+    R_inv = np.linalg.inv(R)
+    H = K @ R_inv @ K_inv
+    
+    # Применяем трансформацию к изображению
+    # Используем INTER_CUBIC для лучшего качества
+    corrected_img = cv2.warpPerspective(img, H, (w, h), flags=cv2.INTER_CUBIC)
+    
+    return corrected_img
+
 def get_focal_length_from_exif(image_path, width, height, fallback_35mm=26.0):
     """
     Извлекает фокусное расстояние из EXIF (с поддержкой iOS/Android).
