@@ -34,6 +34,8 @@ export const state = {
     targetRoll: 0,
     currentPitchDeg: 0,
     currentRollDeg: 0,
+    pendingPitchDeg: 0,
+    pendingRollDeg: 0,
     // Detector (MediaPipe Pose)
     detectorReady: false,
     figureDetected: false,

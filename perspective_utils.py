@@ -11,6 +11,11 @@ def correct_image_perspective(img, pitch_deg, roll_deg, K):
     Возвращает выровненное изображение.
     """
     h, w = img.shape[:2]
+    
+    # Ограничиваем углы, чтобы избежать экстремальных искажений
+    pitch_deg = max(-30, min(30, pitch_deg))
+    roll_deg = max(-30, min(30, roll_deg))
+    
     pitch_rad = np.radians(pitch_deg)
     roll_rad = np.radians(roll_deg)
     
@@ -33,6 +38,19 @@ def correct_image_perspective(img, pitch_deg, roll_deg, K):
     K_inv = np.linalg.inv(K)
     R_inv = np.linalg.inv(R)
     H = K @ R_inv @ K_inv
+    
+    # Корректируем смещение, чтобы центр изображения оставался в центре
+    center = np.array([[w / 2.0], [h / 2.0], [1.0]])
+    center_warped = H @ center
+    center_warped /= center_warped[2]
+    
+    T = np.array([
+        [1, 0, w / 2.0 - center_warped[0, 0]],
+        [0, 1, h / 2.0 - center_warped[1, 0]],
+        [0, 0, 1]
+    ], dtype=np.float32)
+    
+    H = T @ H
     
     # Применяем трансформацию к изображению
     # Используем INTER_CUBIC для лучшего качества

@@ -74,6 +74,10 @@ function captureFrameToPreview() {
     if (previewImage) previewImage.src = canvas.toDataURL('image/jpeg', 0.8);
     if (previewScreen) previewScreen.style.display = 'flex';
 
+    // Store orientation precisely at capture time
+    state.pendingPitchDeg = state.currentPitchDeg;
+    state.pendingRollDeg = state.currentRollDeg;
+
     updateNextButton();
 }
 
@@ -104,7 +108,7 @@ export function bindCaptureHandlers() {
             const previewImage = document.getElementById('preview-image');
             if (previewImage) {
                 state.finalPhotos.push(previewImage.src);
-                state.finalOrientations.push({ pitch: state.currentPitchDeg, roll: state.currentRollDeg });
+                state.finalOrientations.push({ pitch: state.pendingPitchDeg, roll: state.pendingRollDeg });
             }
 
             if (state.currentStep < state.maxSteps - 1) {
