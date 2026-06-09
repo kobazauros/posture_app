@@ -41,8 +41,12 @@ function updateUI() {
 
     const captureBtn = document.getElementById('capture-btn');
     if (captureBtn) {
-        captureBtn.disabled = !isLevel;
-        captureBtn.classList.toggle('ready', isLevel);
+        // Button requires both: phone is level AND figure is within guide lines.
+        // If detector hasn't loaded, skip the figure check so user isn't blocked.
+        const figureOk = !state.detectorReady || (state.figureInBounds && state.poseValid);
+        const canCapture = isLevel && figureOk;
+        captureBtn.disabled = !canCapture;
+        captureBtn.classList.toggle('ready', canCapture);
     }
 
     const horizon = document.getElementById('moving-horizon');

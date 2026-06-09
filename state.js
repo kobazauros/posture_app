@@ -31,6 +31,16 @@ export const state = {
     targetPitch: 0,
     currentRoll: 0,
     targetRoll: 0,
+    // Detector (MediaPipe Pose)
+    detectorReady: false,
+    figureDetected: false,
+    figureInBounds: false,
+    shoulderAngleDeg: 0,
+    hipAngleDeg: 0,
+    lastKeypoints: null,
+    // New pose validation fields
+    poseValid: true,
+    poseErrorMessage: '',
 };
 
 /**

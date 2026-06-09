@@ -58,14 +58,14 @@ def claim_session():
 
     if user_id_decoded:
         registry = load_session_registry()
-        entry = registry.get(str(user_id_decoded)) if isinstance(registry, dict) else None
+        entry = registry.get(user_id_decoded) if isinstance(registry, dict) else None
         if isinstance(entry, dict) and entry.get('claimed') and entry.get('session_id'):
             # If token belongs to a user who already has a claimed session, prefer
             # returning that existing session instead of creating a new one.
             # If the client_id differs, update it to reflect the current client.
             if client_id and entry.get('client_id') != client_id:
                 entry['client_id'] = client_id
-                registry[str(user_id_decoded)] = entry
+                registry[user_id_decoded] = entry
                 try:
                     from security import save_session_registry
                     save_session_registry(registry)

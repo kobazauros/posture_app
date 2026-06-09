@@ -1,0 +1,189 @@
+import cv2
+import numpy as np
+from PIL import Image, ExifTags
+
+def get_focal_length_from_exif(image_path, width, height, fallback_35mm=26.0):
+    """
+    Извлекает фокусное расстояние из EXIF (с поддержкой iOS/Android).
+    В случае неудачи использует fallback_35mm (стандартно 26 мм для шириков смартфонов).
+    Возвращает фокусное в пикселях (f_px) и матрицу камеры (K).
+    """
+    focal_35mm = fallback_35mm
+    try:
+        img = Image.open(image_path)
+        exif = img.getexif()
+        
+        found = False
+        if exif is not None:
+            for tag_id, value in exif.items():
+                tag = ExifTags.TAGS.get(tag_id, tag_id)
+                if tag == 'FocalLengthIn35mmFilm':
+                    focal_35mm = float(value)
+                    found = True
+                    break
+        
+        # Если не нашли в базовом EXIF, ищем во вложенном ExifOffset
+        if not found and hasattr(img, '_getexif') and img._getexif():
+            exif_dict = img._getexif()
+            if exif_dict:
+                for tag_id, value in exif_dict.items():
+                    tag = ExifTags.TAGS.get(tag_id, tag_id)
+                    if tag == 'FocalLengthIn35mmFilm':
+                        focal_35mm = float(value)
+                        found = True
+                        break
+                        
+        if found:
+            print(f"  EXIF: Найдено эквивалентное фокусное расстояние {focal_35mm}mm")
+        else:
+            print(f"  EXIF: Фокусное расстояние не найдено. Используем стандартное для смартфона {fallback_35mm}mm")
+
+    except Exception as e:
+        print(f"  EXIF: Ошибка при чтении ({e}). Используем fallback = {fallback_35mm}mm")
+        
+    # Вычисляем фокусное расстояние в пикселях
+    # Диагональ / ширина полного кадра ~ 36мм (если ориентация горизонтальная) или 24мм (если вертикальная)
+    sensor_width_mm = 36.0 if width >= height else 24.0
+    f_px = (focal_35mm / sensor_width_mm) * max(width, height)
+    
+    # Создаем матрицу камеры
+    K = np.array([
+        [f_px, 0, width / 2.0],
+        [0, f_px, height / 2.0],
+        [0, 0, 1]
+    ], dtype=np.float32)
+    
+    return f_px, K
+
+def get_height_from_mask(mask_path):
+    """
+    Определяет высоту силуэта в пикселях на основе SAM маски.
+    """
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    if mask is None:
+        print(f"  Не удалось загрузить маску: {mask_path}")
+        return None
+        
+    y_indices, x_indices = np.where(mask > 0)
+    if len(y_indices) == 0:
+        return None
+        
+    min_y = np.min(y_indices)
+    max_y = np.max(y_indices)
+    h_px = max_y - min_y
+    return h_px
+
+def estimate_perspective(f_px, K, mask_height_px, anny_joints_3d, mp_2d, bone_labels, real_height_m=1.88):
+    """
+    Решает задачу PnP (Perspective-n-Point) для оценки наклона и положения камеры.
+    """
+    # 1. Считаем грубую дистанцию Z по маске
+    Z = f_px * (real_height_m / mask_height_px)
+    
+    # 2. Формируем пары 3D -> 2D для алгоритма PnP
+    # Берем больше надежных костей, чтобы PnP не ошибался с точкой схода
+    target_bones = [
+        "head", "neck01", "spine01", "spine02", "pelvis",
+        "upperarm01.L", "upperarm01.R", 
+        "lowerarm01.L", "lowerarm01.R", 
+        "wrist.L", "wrist.R",
+        "upperleg01.L", "upperleg01.R",
+        "lowerleg01.L", "lowerleg01.R",
+        "foot.L", "foot.R"
+    ]
+    
+    obj_points = []
+    img_points = []
+    
+    for bone in target_bones:
+        if bone in mp_2d and bone in bone_labels:
+            idx = bone_labels.index(bone)
+            pt_3d = anny_joints_3d[idx] 
+            
+            # Конвертация координат Anny -> OpenCV
+            # Anny: X (влево), Y (глубина вперед), Z (высота вверх)
+            # OpenCV: X (вправо), Y (вниз), Z (глубина вдаль)
+            x_cv = -pt_3d[0]
+            y_cv = -pt_3d[2]
+            z_cv = -pt_3d[1]
+            
+            obj_points.append([x_cv, y_cv, z_cv])
+            img_points.append(mp_2d[bone])
+            
+    if len(obj_points) < 4:
+        print("  PnP: Недостаточно точек для оценки перспективы (нужно минимум 4).")
+        return None, None, None
+        
+    obj_points = np.array(obj_points, dtype=np.float32)
+    img_points = np.array(img_points, dtype=np.float32)
+    
+    # Решаем PnP с помощью более стабильного алгоритма SQPNP (или EPNP)
+    flags = cv2.SOLVEPNP_SQPNP if hasattr(cv2, 'SOLVEPNP_SQPNP') else cv2.SOLVEPNP_EPNP
+    success, rvec, tvec = cv2.solvePnP(
+        obj_points, img_points, K, None, flags=flags
+    )
+    
+    if not success or np.isnan(rvec).any() or np.isnan(tvec).any():
+        print("  PnP: SQPNP не удался, пробуем ITERATIVE.")
+        # Задаем начальное приближение tvec с рассчитанной дистанцией Z
+        rvec_init = np.zeros((3, 1), dtype=np.float32)
+        tvec_init = np.array([[0.0], [0.0], [Z]], dtype=np.float32)
+        success, rvec, tvec = cv2.solvePnP(
+            obj_points, img_points, K, None, 
+            rvec=rvec_init, tvec=tvec_init, 
+            useExtrinsicGuess=True, flags=cv2.SOLVEPNP_ITERATIVE
+        )
+        
+    if not success:
+        print("  PnP: Ошибка при решении Perspective-n-Point.")
+        return None, None, None
+        
+    # Ищем уровень пола (самая низкая точка стоп)
+    idx_foot_l = bone_labels.index("foot.L")
+    idx_foot_r = bone_labels.index("foot.R")
+    floor_y_anny = min(anny_joints_3d[idx_foot_l][2], anny_joints_3d[idx_foot_r][2])
+    floor_y_cv = -floor_y_anny
+    
+    return rvec, tvec, floor_y_cv
+
+def draw_perspective_grid(img, rvec, tvec, K, floor_y_cv, grid_size=10, cell_size=0.5):
+    """
+    Рисует сетку пола, уходящую вдаль.
+    :param grid_size: количество ячеек
+    :param cell_size: размер ячейки в метрах
+    """
+    points_3d = []
+    half_grid = grid_size * cell_size / 2.0
+    
+    # Формируем линии сетки
+    for x in np.arange(-half_grid, half_grid + cell_size, cell_size):
+        points_3d.append([x, floor_y_cv, -half_grid])
+        points_3d.append([x, floor_y_cv, half_grid])
+        
+    for z in np.arange(-half_grid, half_grid + cell_size, cell_size):
+        points_3d.append([-half_grid, floor_y_cv, z])
+        points_3d.append([half_grid, floor_y_cv, z])
+        
+    points_3d = np.array(points_3d, dtype=np.float32)
+    
+    # Проецируем 3D сетку на 2D картинку
+    points_2d, _ = cv2.projectPoints(points_3d, rvec, tvec, K, None)
+    points_2d = points_2d.reshape(-1, 2)
+    
+    # Отрисовка серым цветом, как просил пользователь
+    grid_color = (128, 128, 128)
+    thickness = 1
+    
+    overlay = img.copy()
+    num_lines = int(grid_size) + 1
+    
+    # Рисуем линии
+    for i in range(num_lines * 2):
+        pt1 = tuple(points_2d[i * 2].astype(int))
+        pt2 = tuple(points_2d[i * 2 + 1].astype(int))
+        # Проверка, чтобы точки не улетали за бесконечность (за спину камеры)
+        if pt1[1] > -10000 and pt2[1] > -10000: 
+            cv2.line(overlay, pt1, pt2, grid_color, thickness)
+            
+    # Полупрозрачное смешивание
+    cv2.addWeighted(overlay, 0.5, img, 0.5, 0, img)

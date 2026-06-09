@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Вытаскиваем секретный ключ.
-SECRET_WEB_TOKEN = os.getenv("SECRET_WEB_TOKEN")
+SECRET_WEB_TOKEN = os.getenv("SECRET_WEB_TOKEN", "")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SESSION_REGISTRY_PATH = os.path.join(BASE_DIR, "results", "session_registry.json")
@@ -146,7 +146,7 @@ def claim_token(token, client_id=None):
         return None, None
 
     registry = load_session_registry()
-    entry = registry.get(str(user_id))
+    entry = registry.get(user_id)
     if not entry or entry.get("token") != token or entry.get("claimed"):
         return None, None
 
@@ -156,7 +156,7 @@ def claim_token(token, client_id=None):
     if client_id:
         entry["client_id"] = client_id
     entry["claimed_at"] = int(time.time())
-    registry[str(user_id)] = entry
+    registry[user_id] = entry
     save_session_registry(registry)
     return user_id, session_id
 

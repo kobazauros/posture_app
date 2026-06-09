@@ -57,6 +57,14 @@ body {
     pointer-events: none; 
     z-index: 10; 
 }
+
+/* DETECTOR OVERLAY: face blur canvas sits below guide lines */
+#detector-canvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1; /* Below guide lines but inside hud-container */
+}
 .spine-guide { position: absolute; top: 15%; bottom: 150px; left: 50%; width: 2px; background: rgba(255,255,255,0.2); }
 #moving-horizon { position: absolute; top: 50%; left: 50%; width: 160px; height: 3px; margin-left: -80px; margin-top: -1.5px; background: #fff; border-radius: 2px; }
 #moving-horizon.in-level { background: #34C759; box-shadow: 0 0 10px #34C759; }
@@ -77,8 +85,43 @@ body {
 }
 
 /* Статус и инфо-текст */
-.guide-head::after { content: 'Уровень макушки'; position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.8); font-size: 15px; }
-.guide-feet::after { content: 'Уровень стоп'; position: absolute; bottom: 10px; left: 10px; color: rgba(255,255,255,0.8); font-size: 15px; }
+.guide-head::after { content: 'Уровень макушки'; position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.8); font-size: 15px; transition: color 0.3s; }
+.guide-feet::after { content: 'Уровень стоп'; position: absolute; bottom: 10px; left: 10px; color: rgba(255,255,255,0.8); font-size: 15px; transition: color 0.3s; }
+
+/* GUIDE LINES: мигание красным когда фигура выходит за границу */
+@keyframes guideBlink {
+    0%, 100% { border-color: rgba(255, 69, 58, 0.9); }
+    50% { border-color: rgba(255, 69, 58, 0.15); }
+}
+.guide-head.blinking { animation: guideBlink 0.8s ease-in-out infinite; }
+.guide-head.blinking::after { color: rgba(255, 69, 58, 0.9); }
+.guide-feet.blinking { animation: guideBlink 0.8s ease-in-out infinite; }
+.guide-feet.blinking::after { color: rgba(255, 69, 58, 0.9); }
+
+/* GUIDE LINES: зелёный когда фигура полностью в кадре */
+.guide-head.in-bounds { border-top-color: rgba(52, 199, 89, 0.7); transition: border-color 0.4s; }
+.guide-head.in-bounds::after { color: rgba(52, 199, 89, 0.9); }
+.guide-feet.in-bounds { border-bottom-color: rgba(52, 199, 89, 0.7); transition: border-color 0.4s; }
+.guide-feet.in-bounds::after { color: rgba(52, 199, 89, 0.9); }
+
+/* СТАТУС ФИГУРЫ (детектор) */
+#figure-status {
+    display: none;
+    position: absolute;
+    white-space: nowrap;
+    bottom: 210px; /* Выше статуса уровня */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: 500;
+    background: rgba(255, 69, 58, 0.7);
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 20px;
+    z-index: 31;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
 
 #status { 
     position: absolute; 

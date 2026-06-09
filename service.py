@@ -9,6 +9,8 @@ from pathlib import Path
 from datetime import datetime
 from io import BytesIO
 
+import posture_annotator
+
 try:
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -107,17 +109,21 @@ def get_cyrillic_fonts():
     return {'regular': 'Helvetica', 'bold': 'Helvetica'}
 
 
-def resize_image_maintain_aspect(image_path, max_width_mm, max_height_mm):
+def resize_image_maintain_aspect(image_or_path, max_width_mm, max_height_mm):
     """
     Resize image while maintaining aspect ratio.
     Returns BytesIO with resized image.
     """
-    img = PILImage.open(image_path)
+    if isinstance(image_or_path, (str, Path)):
+        img = PILImage.open(image_or_path)
+    else:
+        img = image_or_path
+        
     original_width, original_height = img.size
     
-    # Convert mm to pixels (approximately 3.78 pixels per mm at 96 DPI)
-    max_width_px = int(max_width_mm * 3.78)
-    max_height_px = int(max_height_mm * 3.78)
+    # Convert mm to pixels (approximately 11.81 pixels per mm at 300 DPI)
+    max_width_px = int(max_width_mm * 11.81)
+    max_height_px = int(max_height_mm * 11.81)
     
     # Calculate aspect ratio
     aspect_ratio = original_width / original_height
@@ -139,7 +145,7 @@ def resize_image_maintain_aspect(image_path, max_width_mm, max_height_mm):
     output = BytesIO()
     img_resized.save(output, format='JPEG', quality=90)
     output.seek(0)
-    return output
+    return output, new_width, new_height
 
 
 def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
@@ -194,7 +200,7 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
                             rightMargin=15*mm, leftMargin=15*mm,
                             topMargin=15*mm, bottomMargin=15*mm)
     
-    story = []
+    story: list = []
     
     # Define styles
     styles = getSampleStyleSheet()
@@ -276,18 +282,32 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
         received_photos_dir / f'{user_id}_{timestamp}_photo_2.jpg',
         received_photos_dir / f'{user_id}_{timestamp}_photo_3.jpg',
     ]
-    photo_labels = ["Профиль слева", "Профиль справа", "Фронтальный вид"]
+    photo_labels = ["Фронтальный вид", "Профиль справа", "Профиль слева"]
+    view_types = ["frontal", "right_side", "left_side"]
     if data_count >= 4:
         photo_paths.append(helper_photo)
         photo_labels.append("Вид со спины")
+        view_types.append("back")
     
     photos_data = []
-    for photo_path, label in zip(photo_paths, photo_labels):
+    all_measurements = {}
+    for photo_path, label, vtype in zip(photo_paths, photo_labels, view_types):
         if photo_path.exists():
             try:
-                # Resize image maintaining aspect ratio
-                img_io = resize_image_maintain_aspect(photo_path, 35, 50)
-                img = Image(img_io, width=35*mm, height=None)
+                annotated_img, measurements = posture_annotator.process_photo(str(photo_path), vtype)
+                if annotated_img is None:
+                    annotated_img = PILImage.open(photo_path)
+                    
+                if measurements:
+                    all_measurements[label] = measurements
+
+                # Resize image maintaining aspect ratio and quality (enlarged for max 2 per row)
+                img_io, new_w_px, new_h_px = resize_image_maintain_aspect(annotated_img, 75, 133)
+                
+                # Calculate physical dimensions for PDF based on 300 DPI (11.81 px/mm)
+                pdf_w_mm = new_w_px / 11.81
+                pdf_h_mm = new_h_px / 11.81
+                img = Image(img_io, width=pdf_w_mm*mm, height=pdf_h_mm*mm)
                 
                 # Create cell with image and label
                 img_with_label = f"<br/><br/>{label}"
@@ -300,21 +320,65 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
                                                                wordWrap='CJK'))])
             except Exception as e:
                 print(f"Error processing photo {photo_path}: {e}")
+                photos_data.append([Paragraph(f"Ошибка фото", body_style)])
         else:
             photos_data.append([Paragraph(f"Фото не найдено", body_style)])
     
     if photos_data:
-        col_count = len(photos_data)
-        photos_table = Table([photos_data], colWidths=[(13.5 / col_count) * cm for _ in range(col_count)])
-        photos_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 5),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-        ]))
-        story.append(photos_table)
+        # Group photos into rows of 2
+        rows_data = []
+        for i in range(0, len(photos_data), 2):
+            rows_data.append(photos_data[i:i+2])
+            
+        for row in rows_data:
+            col_count = len(row)
+            # Each cell gets 8.5cm. If 1 cell, table width is 8.5cm and centered on page.
+            photos_table = Table([row], colWidths=[8.5 * cm for _ in range(col_count)])
+            photos_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 5),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+            ]))
+            story.append(photos_table)
+            story.append(Spacer(1, 0.3*cm))
     
-    story.append(Spacer(1, 0.5*cm))
+    # Push everything else to the next page
+    story.append(PageBreak())
+    
+    if all_measurements:
+        story.append(Paragraph("Измерения осанки", heading_style))
+        meas_data = [["Ракурс", "Параметр", "Значение", "Оценка"]]
+        for label, meas in all_measurements.items():
+            if 'shoulder_angle' in meas:
+                val = meas['shoulder_angle']
+                eval_str = "Норма" if abs(val) < 2 else "Незнач. асимметрия" if abs(val) < 5 else "Асимметрия"
+                meas_data.append([label, "Наклон плеч", f"{val:+.1f}°", eval_str])
+            if 'hip_angle' in meas:
+                val = meas['hip_angle']
+                eval_str = "Норма" if abs(val) < 2 else "Незнач. асимметрия" if abs(val) < 5 else "Асимметрия"
+                meas_data.append([label, "Наклон таза", f"{val:+.1f}°", eval_str])
+            if 'forward_head_angle' in meas:
+                val = meas['forward_head_angle']
+                meas_data.append([label, "Смещение головы", f"{val:+.0f}°", "Информативно"])
+            if 'shoulder_hip_angle' in meas:
+                val = meas['shoulder_hip_angle']
+                meas_data.append([label, "Наклон плеч-таза", f"{val:+.0f}°", "Информативно"])
+                
+        if len(meas_data) > 1:
+            meas_table = Table(meas_data, colWidths=[4*cm, 4*cm, 2.5*cm, 4.5*cm])
+            meas_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f5f5f5')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), regular_font),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ]))
+            story.append(meas_table)
+            story.append(Spacer(1, 0.5*cm))
     
     # Summary Section
     story.append(Paragraph("Резюме анализа", heading_style))

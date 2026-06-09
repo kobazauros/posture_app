@@ -12,7 +12,7 @@ except Exception:
 import base64
 import json
 import os
-from codecs import open 
+
 from dotenv import load_dotenv
 import re
 import textwrap
@@ -23,9 +23,9 @@ from typing import Any, Mapping, Sequence
 
 # Primary and fallback models to try in order
 MODEL_CHAIN = [
+    "gemini-2.5-flash-image",
+    "gemini-2.5-pro",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-flash-latest",
 ]
 BASE_DIR = Path(__file__).resolve().parent
 PROMPT_PATH = BASE_DIR / "posture_ai_prompt.md"
@@ -215,6 +215,8 @@ def analyze_posture_gemini(images: Sequence[str], patient_data: Mapping[str, Any
     # Only use multimodal parts when the imported `types` exposes the
     # expected classes (`Part` and `Content`). Some SDK builds expose a
     # `types` module without these helpers, so check for them explicitly.
+    content_parts = None
+    prompt = ""
     if types is not None and hasattr(types, "Part") and hasattr(types, "Content"):
         content_parts = [
             types.Part.from_text(text=request_text),

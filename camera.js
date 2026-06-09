@@ -1,5 +1,6 @@
 import { MAX_CAMERA_ZOOM, MIN_CAMERA_ZOOM, state } from './state.js';
 import { initSensors } from './sensors.js';
+import { initDetector, startDetectionLoop, stopDetectionLoop } from './detector.js';
 
 /**
  * Clamps a numeric value into the provided range.
@@ -114,6 +115,8 @@ function bindCameraGestures(video) {
  */
 export function stopCamera() {
     try {
+        stopDetectionLoop();
+
         if (state.stream) {
             state.stream.getTracks().forEach((track) => {
                 try {
@@ -168,6 +171,11 @@ export async function startCamera() {
         const capabilities = track && typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
         state.zoomSupport = !!(capabilities && typeof capabilities.zoom !== 'undefined');
         initSensors();
+
+        // Start figure detection (non-blocking; camera works even if detector fails)
+        initDetector()
+            .then(() => startDetectionLoop())
+            .catch((err) => console.warn('[camera] detector init failed', err));
     } catch (err) {
         alert('Камера недоступна. Убедитесь, что используете HTTPS.');
     }
