@@ -1,3 +1,10 @@
 [tool.pyrefly]
 venvPath = "."
 venv = ".venv"
+project-excludes = [
+    "**/_pyrefly_virtual_/**",
+    "**/inmemory/**"
+]
+project-includes = [
+    "**/*.py"
+]

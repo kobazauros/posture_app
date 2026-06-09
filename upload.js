@@ -189,6 +189,7 @@ export function sendPhotosToServer() {
                 gender: selectedGender,
             },
             images: state.finalPhotos,
+            orientations: state.finalOrientations,
         }),
     })
         .then(async (response) => {

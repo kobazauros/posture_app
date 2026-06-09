@@ -91,6 +91,8 @@ export function initSensors() {
 
             state.targetPitch = pitchDeg * 5;
             state.targetRoll = rollDeg;
+            state.currentPitchDeg = pitchDeg;
+            state.currentRollDeg = rollDeg;
         }, { passive: true });
     }
 

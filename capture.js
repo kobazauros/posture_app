@@ -104,6 +104,7 @@ export function bindCaptureHandlers() {
             const previewImage = document.getElementById('preview-image');
             if (previewImage) {
                 state.finalPhotos.push(previewImage.src);
+                state.finalOrientations.push({ pitch: state.currentPitchDeg, roll: state.currentRollDeg });
             }
 
             if (state.currentStep < state.maxSteps - 1) {
@@ -126,6 +127,7 @@ export function bindCaptureHandlers() {
 export function resetCaptureFlow() {
     state.currentStep = 0;
     state.finalPhotos = [];
+    state.finalOrientations = [];
     updateStepIndicator();
     updateNextButton();
 }

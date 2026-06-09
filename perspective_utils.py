@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 from PIL import Image, ExifTags
+import json
+import re
 
 def get_focal_length_from_exif(image_path, width, height, fallback_35mm=26.0):
     """
@@ -55,6 +57,95 @@ def get_focal_length_from_exif(image_path, width, height, fallback_35mm=26.0):
     
     return f_px, K
 
+def get_orientation_from_exif(image_path):
+    """
+    Пытается извлечь Pitch (наклон вверх/вниз) и Roll (наклон влево/вправо) из EXIF.
+    1. Ищет в стандартном EXIF UserComment (JSON вида {"pitch": 10, "roll": 0}).
+    2. Ищет в XMP метаданных (формат XML, который используют Google Camera, дроны и т.д.).
+    Возвращает pitch, roll в градусах, или None, None.
+    """
+    pitch, roll = None, None
+    
+    # 1. Проверяем EXIF UserComment
+    try:
+        img = Image.open(image_path)
+        exif = img.getexif()
+        if exif:
+            for tag_id, value in exif.items():
+                tag = ExifTags.TAGS.get(tag_id, tag_id)
+                if tag == 'UserComment':
+                    if isinstance(value, bytes):
+                        # Убираем префикс кодировки (обычно 8 байт, например ASCII\0\0\0)
+                        value = value[8:].decode('utf-8', errors='ignore').strip()
+                    try:
+                        # Пытаемся распарсить как JSON
+                        data = json.loads(value)
+                        if 'pitch' in data: pitch = float(data['pitch'])
+                        if 'roll' in data: roll = float(data['roll'])
+                    except:
+                        pass
+    except Exception as e:
+        print(f"  EXIF: Ошибка чтения UserComment: {e}")
+
+    # 2. Ищем в сырых XMP данных (XML внутри JPEG)
+    if pitch is None or roll is None:
+        try:
+            with open(image_path, 'rb') as f:
+                content = f.read()
+                # Регулярки для поиска Pitch и Roll в различных XMP форматах
+                pitch_match = re.search(rb'(?:CameraPitch|DevicePitch|GimbalPitchDegree|Pitch)="?([-\d.]+)"?', content, re.IGNORECASE)
+                roll_match = re.search(rb'(?:CameraRoll|DeviceRoll|GimbalRollDegree|Roll)="?([-\d.]+)"?', content, re.IGNORECASE)
+                
+                if pitch_match and pitch is None:
+                    pitch = float(pitch_match.group(1))
+                if roll_match and roll is None:
+                    roll = float(roll_match.group(1))
+        except Exception as e:
+            print(f"  EXIF: Ошибка чтения XMP: {e}")
+
+    if pitch is not None and roll is not None:
+        print(f"  EXIF: Найдена ориентация: Pitch={pitch}°, Roll={roll}°")
+        return pitch, roll
+        
+    return None, None
+
+def solve_tvec_with_fixed_rvec(obj_points, img_points, K, rvec):
+    """
+    Аналитически находит вектор трансляции (tvec) при жестко заданном векторе вращения (rvec).
+    Решает переопределенную систему линейных уравнений методом наименьших квадратов.
+    """
+    R, _ = cv2.Rodrigues(rvec)
+    K_inv = np.linalg.inv(K)
+    
+    A = []
+    B = []
+    
+    for i in range(len(obj_points)):
+        # 3D точка в координатах камеры до сдвига
+        p_prime = R @ obj_points[i].reshape(3, 1)
+        px, py, pz = p_prime[0, 0], p_prime[1, 0], p_prime[2, 0]
+        
+        # Направление луча в пространстве камеры
+        uv1 = np.array([[img_points[i][0]], [img_points[i][1]], [1.0]])
+        v = K_inv @ uv1
+        vx, vy = v[0, 0], v[1, 0]
+        
+        # Формируем матрицу уравнений для tvec = [tx, ty, tz]^T
+        # vx * (pz + tz) - tx = px  =>  -tx + vx * tz = px - vx * pz
+        # vy * (pz + tz) - ty = py  =>  -ty + vy * tz = py - vy * pz
+        A.append([-1,  0, vx])
+        A.append([ 0, -1, vy])
+        
+        B.append(px - vx * pz)
+        B.append(py - vy * pz)
+        
+    A = np.array(A, dtype=np.float32)
+    B = np.array(B, dtype=np.float32)
+    
+    # Решаем систему A * tvec = B
+    tvec, _, _, _ = np.linalg.lstsq(A, B, rcond=None)
+    return tvec.reshape(3, 1)
+
 def get_height_from_mask(mask_path):
     """
     Определяет высоту силуэта в пикселях на основе SAM маски.
@@ -73,9 +164,10 @@ def get_height_from_mask(mask_path):
     h_px = max_y - min_y
     return h_px
 
-def estimate_perspective(f_px, K, mask_height_px, anny_joints_3d, mp_2d, bone_labels, real_height_m=1.88):
+def estimate_perspective(f_px, K, mask_height_px, anny_joints_3d, mp_2d, bone_labels, real_height_m=1.88, pitch_deg=None, roll_deg=None):
     """
-    Решает задачу PnP (Perspective-n-Point) для оценки наклона и положения камеры.
+    Решает задачу PnP для оценки наклона и положения камеры.
+    Если заданы pitch_deg и roll_deg, фиксирует матрицу вращения и рассчитывает только сдвиг.
     """
     # 1. Считаем грубую дистанцию Z по маске
     Z = f_px * (real_height_m / mask_height_px)
@@ -117,27 +209,54 @@ def estimate_perspective(f_px, K, mask_height_px, anny_joints_3d, mp_2d, bone_la
     obj_points = np.array(obj_points, dtype=np.float32)
     img_points = np.array(img_points, dtype=np.float32)
     
-    # Решаем PnP с помощью более стабильного алгоритма SQPNP (или EPNP)
-    flags = cv2.SOLVEPNP_SQPNP if hasattr(cv2, 'SOLVEPNP_SQPNP') else cv2.SOLVEPNP_EPNP
-    success, rvec, tvec = cv2.solvePnP(
-        obj_points, img_points, K, None, flags=flags
-    )
-    
-    if not success or np.isnan(rvec).any() or np.isnan(tvec).any():
-        print("  PnP: SQPNP не удался, пробуем ITERATIVE.")
-        # Задаем начальное приближение tvec с рассчитанной дистанцией Z
-        rvec_init = np.zeros((3, 1), dtype=np.float32)
-        tvec_init = np.array([[0.0], [0.0], [Z]], dtype=np.float32)
+    if pitch_deg is not None and roll_deg is not None:
+        # Если углы известны, создаем жесткий rvec
+        pitch_rad = np.radians(pitch_deg)
+        roll_rad = np.radians(roll_deg)
+        
+        # В OpenCV оси: X вправо, Y вниз, Z от камеры.
+        # pitch - поворот вокруг X. roll - вокруг Z.
+        R_x = np.array([
+            [1, 0, 0],
+            [0, np.cos(pitch_rad), -np.sin(pitch_rad)],
+            [0, np.sin(pitch_rad), np.cos(pitch_rad)]
+        ], dtype=np.float32)
+        
+        R_z = np.array([
+            [np.cos(roll_rad), -np.sin(roll_rad), 0],
+            [np.sin(roll_rad), np.cos(roll_rad), 0],
+            [0, 0, 1]
+        ], dtype=np.float32)
+        
+        R = R_z @ R_x
+        rvec, _ = cv2.Rodrigues(R)
+        
+        # Рассчитываем только tvec
+        tvec = solve_tvec_with_fixed_rvec(obj_points, img_points, K, rvec)
+        print("  PnP: Использована жесткая привязка перспективы по EXIF.")
+        
+    else:
+        # Решаем PnP с помощью более стабильного алгоритма SQPNP (или EPNP)
+        flags = cv2.SOLVEPNP_SQPNP if hasattr(cv2, 'SOLVEPNP_SQPNP') else cv2.SOLVEPNP_EPNP
         success, rvec, tvec = cv2.solvePnP(
-            obj_points, img_points, K, None, 
-            rvec=rvec_init, tvec=tvec_init, 
-            useExtrinsicGuess=True, flags=cv2.SOLVEPNP_ITERATIVE
+            obj_points, img_points, K, None, flags=flags
         )
         
-    if not success:
-        print("  PnP: Ошибка при решении Perspective-n-Point.")
-        return None, None, None
-        
+        if not success or np.isnan(rvec).any() or np.isnan(tvec).any():
+            print("  PnP: SQPNP не удался, пробуем ITERATIVE.")
+            # Задаем начальное приближение tvec с рассчитанной дистанцией Z
+            rvec_init = np.zeros((3, 1), dtype=np.float32)
+            tvec_init = np.array([[0.0], [0.0], [Z]], dtype=np.float32)
+            success, rvec, tvec = cv2.solvePnP(
+                obj_points, img_points, K, None, 
+                rvec=rvec_init, tvec=tvec_init, 
+                useExtrinsicGuess=True, flags=cv2.SOLVEPNP_ITERATIVE
+            )
+            
+        if not success:
+            print("  PnP: Ошибка при решении Perspective-n-Point.")
+            return None, None, None
+            
     # Ищем уровень пола (самая низкая точка стоп)
     idx_foot_l = bone_labels.index("foot.L")
     idx_foot_r = bone_labels.index("foot.R")

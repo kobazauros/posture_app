@@ -3,3 +3,4 @@ received_photos/*
 results/*
 .env
 .venv/*
+*.toml

@@ -168,6 +168,7 @@ def upload():
 
     info = data.get('user_data', {})
     images = data.get('images', [])
+    orientations = data.get('orientations', [])
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Accept either 3 images (solo) or 4 images (with helper / back view)
@@ -209,6 +210,32 @@ def upload():
             
             with open(filepath, 'wb') as f:
                 f.write(img_data)
+                
+            # Если есть ориентация для этого фото, запишем её в EXIF UserComment
+            if i < len(orientations) and orientations[i]:
+                try:
+                    import piexif
+                    pitch = orientations[i].get('pitch')
+                    roll = orientations[i].get('roll')
+                    if pitch is not None and roll is not None:
+                        try:
+                            exif_dict = piexif.load(filepath)
+                        except Exception:
+                            exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "Interop": {}}
+                        
+                        if "Exif" not in exif_dict or exif_dict["Exif"] is None:
+                            exif_dict["Exif"] = {}
+                            
+                        data_json = json.dumps({"pitch": pitch, "roll": roll})
+                        user_comment = b"ASCII\0\0\0" + data_json.encode('utf-8')
+                        exif_dict["Exif"][piexif.ExifIFD.UserComment] = user_comment  # type: ignore
+                        exif_bytes = piexif.dump(exif_dict)
+                        piexif.insert(exif_bytes, filepath)
+                except ImportError:
+                    logger.warning("piexif not installed. Cannot save orientation to EXIF.")
+                except Exception as e:
+                    logger.warning("Failed to save EXIF orientation: %s", e)
+                    
             saved_photos.append(filename)
         except Exception as e:
             print(f"Ошибка при сохранении изображения {i}: {e}")
