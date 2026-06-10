@@ -793,22 +793,30 @@ body {
     letter-spacing: 1px;
 }
 
-/* Неоновый терминальный курсор */
+/* Настройки для неонового блока */
 .neon-cursor {
     color: #39FF14;
-    /* Тот самый зеленый */
     animation: blink 1s step-end infinite;
+    margin-left: 6px;
+    /* Небольшой отступ от буквы T */
+    font-size: 38px;
+    /* Чуть меньше основного текста, чтобы смотрелось аккуратнее */
+    vertical-align: baseline;
 }
 
-/* Подзаголовок */
-.splash-subtitle {
+/* Новый класс для подзаголовка внизу экрана */
+.splash-footer {
+    position: absolute;
+    bottom: 40px;
+    /* Защита от системных жестов iOS/Android */
+    width: 100%;
+    text-align: center;
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     color: #7A8B99;
-    /* Серо-голубой, как в твоем отчете */
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin: 0;
+    letter-spacing: 4px;
+    /* Широкий интервал добавляет статусности */
 }
 
 /* Класс для плавного исчезновения */
