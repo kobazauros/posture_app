@@ -51,6 +51,8 @@ updateStepIndicator();
             }, 1000);
         }
     }
+
+    removeSplash();
 })();
 
 

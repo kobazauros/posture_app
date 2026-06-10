@@ -566,8 +566,8 @@ export async function initDetector() {
         state.detectorReady = true;
         return;
     }
-    /*
     const statusEl = document.getElementById('figure-status');
+    /*
     if (statusEl) {
         statusEl.textContent = 'Загрузка детектора\u2026';
         statusEl.style.display = 'block';
