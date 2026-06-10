@@ -795,7 +795,7 @@ body {
 
 /* Настройки для неонового блока */
 .neon-cursor {
-    color: #39FF14;
+    color: #34C759;
     animation: blink 1s step-end infinite;
     margin-left: 6px;
     /* Небольшой отступ от буквы T */
