@@ -18,7 +18,7 @@ const VISION_CDN =
     `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}`;
 const MODEL_URL =
     'https://storage.googleapis.com/mediapipe-models/pose_landmarker/' +
-    'pose_landmarker_lite/float16/1/pose_landmarker_lite.heavy';
+    'pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task';
 
 /** Detection runs at ~20 FPS to balance accuracy and battery life. */
 const DETECTION_INTERVAL_MS = 50;
@@ -566,12 +566,12 @@ export async function initDetector() {
         state.detectorReady = true;
         return;
     }
-
+    /*
     const statusEl = document.getElementById('figure-status');
     if (statusEl) {
         statusEl.textContent = 'Загрузка детектора\u2026';
         statusEl.style.display = 'block';
-    }
+    }*/
 
     try {
         // Dynamic ESM import from pinned CDN version.

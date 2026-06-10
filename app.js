@@ -6,6 +6,7 @@ import { attachFormValidation, validateForm } from './form.js';
 import { startCamera, switchCameraFacing } from './camera.js';
 import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js';
 import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js';
+import { initDetector } from './detector.js';
 
 bootstrapAuthFromUrl();
 getOrCreateClientId();
@@ -18,25 +19,37 @@ updateStepIndicator();
     function removeSplash() {
         const splash = document.getElementById('splash-screen');
         if (!splash) return;
+        // Проверяем, загружал ли пользователь ИИ ранее
+        const isCached = localStorage.getItem('mediapipe_cached');
 
-        // Держим премиальный черный экран ровно 1.5 секунды
-        setTimeout(() => {
-            splash.classList.add('fade-out');
+        if (!isCached) {
+            const loadAI = initDetector().then(() => {
+                localStorage.setItem('mediapipe_cached', 'true');
+            }).catch(err => console.error('[Splash] Ошибка загрузки ИИ:', err));
 
-            // Удаляем из DOM
+            const minTime = new Promise(resolve => setTimeout(resolve, 1500));
+
+            Promise.all([loadAI, minTime]).then(() => {
+                splash.classList.add('fade-out');
+                setTimeout(() => splash.remove(), 600);
+            });
+        } else {
+            const logo = splash.querySelector('.splash-logo');
+            if (logo) {
+                logo.innerHTML = 'SESSION<br>RESTORED<span class="neon-cursor">&#9608;</span>';
+            }
             setTimeout(() => {
-                splash.remove();
-            }, 600); // время CSS-анимации transition
-        }, 1500);
-    }
-
-    // Проверяем статус загрузки документа
-    if (document.readyState === 'loading') {
-        // DOM еще грузится, ждем события
-        document.addEventListener('DOMContentLoaded', removeSplash);
-    } else {
-        // DOM уже загружен (событие было пропущено), запускаем сразу
-        removeSplash();
+                splash.classList.add('fade-out');
+                setTimeout(() => {
+                    splash.remove();
+                }, 600);
+            }, 800);
+            // Распаковываем ИИ в фоне (из кэша достанет мгновенно, но WASM нужно развернуть)
+            // Даем небольшую паузу (1 сек), чтобы UI формы успел отрисоваться без лагов
+            setTimeout(() => {
+                initDetector().catch(err => console.warn(err));
+            }, 1000);
+        }
     }
 })();
 
