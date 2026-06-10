@@ -13,6 +13,34 @@ attachFormValidation();
 bindCaptureHandlers();
 updateStepIndicator();
 
+// 🔥 Логика работы Splash Screen
+(function showSplashScreen() {
+    function removeSplash() {
+        const splash = document.getElementById('splash-screen');
+        if (!splash) return;
+
+        // Держим премиальный черный экран ровно 1.5 секунды
+        setTimeout(() => {
+            splash.classList.add('fade-out');
+
+            // Удаляем из DOM
+            setTimeout(() => {
+                splash.remove();
+            }, 600); // время CSS-анимации transition
+        }, 1500);
+    }
+
+    // Проверяем статус загрузки документа
+    if (document.readyState === 'loading') {
+        // DOM еще грузится, ждем события
+        document.addEventListener('DOMContentLoaded', removeSplash);
+    } else {
+        // DOM уже загружен (событие было пропущено), запускаем сразу
+        removeSplash();
+    }
+})();
+
+
 /**
  * Handles the transition from the form screen into the camera flow.
  * @returns {Promise<void>}

@@ -1,28 +1,65 @@
-body { 
-    margin: 0; overflow: hidden; background: #000; color: #fff; 
-    font-family: -apple-system, sans-serif; height: 100vh;
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, sans-serif;
+    height: 100vh;
     box-sizing: border-box;
 }
 
-*, *:before, *:after { box-sizing: inherit; } /* Применяем правильный расчет размеров ко всем элементам */
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+/* Применяем правильный расчет размеров ко всем элементам */
 
 /* АНКЕТА */
 #form-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #000; z-index: 300; display: flex; align-items: center; justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow-y: auto;
     padding: 24px 0 calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
-.form-container { width: 85%; max-width: 400px; }
-.form-container h2 { text-align: center; margin-bottom: 25px; }
-.input-group input, .input-group select {
-    width: 100%; padding: 15px; background: #1c1c1e; border: 1px solid #333;
-    border-radius: 12px; color: #fff; font-size: 17px; margin-bottom: 12px; box-sizing: border-box;
+
+.form-container {
+    width: 85%;
+    max-width: 400px;
 }
+
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 15px;
+    background: #1c1c1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 17px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
 .input-group input.invalid {
     border-color: #ff453a;
     background: #24181a;
 }
+
 .field-error {
     min-height: 18px;
     margin: -6px 2px 10px;
@@ -30,86 +67,186 @@ body {
     font-size: 12px;
     line-height: 1.3;
 }
+
 #to-camera-btn {
-    width: 100%; padding: 18px; background: #34C759; color: #fff;
-    border: none; border-radius: 14px; font-weight: bold; font-size: 17px;
+    width: 100%;
+    padding: 18px;
+    background: #34C759;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-weight: bold;
+    font-size: 17px;
 }
 
 /* КАМЕРА */
-#camera-screen { 
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%; 
-    background: #000; overflow: hidden;
+#camera-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
 }
+
 #camera-feed {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     touch-action: none;
     transform-origin: center center;
     will-change: transform;
-    z-index: 1; /* Видео в самом низу слоев */
+    z-index: 1;
+    /* Видео в самом низу слоев */
 }
 
-#hud-container { 
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%; 
-    pointer-events: none; 
-    z-index: 10; 
+#hud-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
 }
 
 /* DETECTOR OVERLAY: face blur canvas sits below guide lines */
 #detector-canvas {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
-    z-index: 1; /* Below guide lines but inside hud-container */
+    z-index: 1;
+    /* Below guide lines but inside hud-container */
 }
-.spine-guide { position: absolute; top: 15%; bottom: 150px; left: 50%; width: 2px; background: rgba(255,255,255,0.2); }
-#moving-horizon { position: absolute; top: 50%; left: 50%; width: 160px; height: 3px; margin-left: -80px; margin-top: -1.5px; background: #fff; border-radius: 2px; }
-#moving-horizon.in-level { background: #34C759; box-shadow: 0 0 10px #34C759; }
+
+.spine-guide {
+    position: absolute;
+    top: 15%;
+    bottom: 150px;
+    left: 50%;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#moving-horizon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 160px;
+    height: 3px;
+    margin-left: -80px;
+    margin-top: -1.5px;
+    background: #fff;
+    border-radius: 2px;
+}
+
+#moving-horizon.in-level {
+    background: #34C759;
+    box-shadow: 0 0 10px #34C759;
+}
 
 /* НАПРАВЛЯЮЩИЕ: Симметрия */
-.guide-head { 
-    position: absolute; 
-    top: 20px; /* Прижимаем к самому верху */
-    left: 0; width: 100%; 
-    border-top: 3px dashed rgba(255, 255, 255, 0.6); 
+.guide-head {
+    position: absolute;
+    top: 20px;
+    /* Прижимаем к самому верху */
+    left: 0;
+    width: 100%;
+    border-top: 3px dashed rgba(255, 255, 255, 0.6);
 }
 
-.guide-feet { 
-    position: absolute; 
-    bottom: 20px; /* Теперь линия под кнопкой, у самого края */
-    left: 0; width: 100%; 
-    border-bottom: 3px dashed rgba(255, 255, 255, 0.6); 
+.guide-feet {
+    position: absolute;
+    bottom: 20px;
+    /* Теперь линия под кнопкой, у самого края */
+    left: 0;
+    width: 100%;
+    border-bottom: 3px dashed rgba(255, 255, 255, 0.6);
 }
 
 /* Статус и инфо-текст */
-.guide-head::after { content: 'Уровень макушки'; position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.8); font-size: 15px; transition: color 0.3s; }
-.guide-feet::after { content: 'Уровень стоп'; position: absolute; bottom: 10px; left: 10px; color: rgba(255,255,255,0.8); font-size: 15px; transition: color 0.3s; }
+.guide-head::after {
+    content: 'Уровень макушки';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+    transition: color 0.3s;
+}
+
+.guide-feet::after {
+    content: 'Уровень стоп';
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+    transition: color 0.3s;
+}
 
 /* GUIDE LINES: мигание красным когда фигура выходит за границу */
 @keyframes guideBlink {
-    0%, 100% { border-color: rgba(255, 69, 58, 0.9); }
-    50% { border-color: rgba(255, 69, 58, 0.15); }
+
+    0%,
+    100% {
+        border-color: rgba(255, 69, 58, 0.9);
+    }
+
+    50% {
+        border-color: rgba(255, 69, 58, 0.15);
+    }
 }
-.guide-head.blinking { animation: guideBlink 0.8s ease-in-out infinite; }
-.guide-head.blinking::after { color: rgba(255, 69, 58, 0.9); }
-.guide-feet.blinking { animation: guideBlink 0.8s ease-in-out infinite; }
-.guide-feet.blinking::after { color: rgba(255, 69, 58, 0.9); }
+
+.guide-head.blinking {
+    animation: guideBlink 0.8s ease-in-out infinite;
+}
+
+.guide-head.blinking::after {
+    color: rgba(255, 69, 58, 0.9);
+}
+
+.guide-feet.blinking {
+    animation: guideBlink 0.8s ease-in-out infinite;
+}
+
+.guide-feet.blinking::after {
+    color: rgba(255, 69, 58, 0.9);
+}
 
 /* GUIDE LINES: зелёный когда фигура полностью в кадре */
-.guide-head.in-bounds { border-top-color: rgba(52, 199, 89, 0.7); transition: border-color 0.4s; }
-.guide-head.in-bounds::after { color: rgba(52, 199, 89, 0.9); }
-.guide-feet.in-bounds { border-bottom-color: rgba(52, 199, 89, 0.7); transition: border-color 0.4s; }
-.guide-feet.in-bounds::after { color: rgba(52, 199, 89, 0.9); }
+.guide-head.in-bounds {
+    border-top-color: rgba(52, 199, 89, 0.7);
+    transition: border-color 0.4s;
+}
+
+.guide-head.in-bounds::after {
+    color: rgba(52, 199, 89, 0.9);
+}
+
+.guide-feet.in-bounds {
+    border-bottom-color: rgba(52, 199, 89, 0.7);
+    transition: border-color 0.4s;
+}
+
+.guide-feet.in-bounds::after {
+    color: rgba(52, 199, 89, 0.9);
+}
 
 /* СТАТУС ФИГУРЫ (детектор) */
 #figure-status {
     display: none;
     position: absolute;
     white-space: nowrap;
-    bottom: 210px; /* Выше статуса уровня */
+    bottom: 210px;
+    /* Выше статуса уровня */
     left: 50%;
     transform: translateX(-50%);
     font-size: 14px;
@@ -123,35 +260,41 @@ body {
     -webkit-backdrop-filter: blur(4px);
 }
 
-#status { 
-    position: absolute; 
+#status {
+    position: absolute;
     white-space: nowrap;
-    bottom: 170px; /* Поднимаем статус выше кнопок */
-    left: 50%; 
-    transform: translateX(-50%); 
-    font-size: 14px; 
-    background: rgba(0,0,0,0.4); 
-    padding: 5px 15px; 
-    border-radius: 20px; 
-    z-index: 30; 
+    bottom: 170px;
+    /* Поднимаем статус выше кнопок */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 5px 15px;
+    border-radius: 20px;
+    z-index: 30;
 }
+
 /* ПАНЕЛЬ УПРАВЛЕНИЯ: Теперь она прозрачная и приподнята */
 #controls-bar {
-    position: absolute; 
-    bottom: 40px; /* Поднимаем всю панель выше */
+    position: absolute;
+    bottom: 40px;
+    /* Поднимаем всю панель выше */
     left: 0;
-    width: 100%; 
-    height: 120px; 
-    background: transparent; /* Убираем черную полосу */
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    gap: 40px; 
+    width: 100%;
+    height: 120px;
+    background: transparent;
+    /* Убираем черную полосу */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
     z-index: 20;
-    pointer-events: none; /* Пропускаем нажатия сквозь пустые места к видео */
+    pointer-events: none;
+    /* Пропускаем нажатия сквозь пустые места к видео */
 }
+
 /* Возвращаем кликабельность только самим кнопкам */
-#controls-bar > * {
+#controls-bar>* {
     pointer-events: auto;
 }
 
@@ -161,6 +304,7 @@ body {
     align-items: center;
     gap: 10px;
 }
+
 #zoom-indicator {
     min-width: 86px;
     padding: 6px 10px;
@@ -174,47 +318,69 @@ body {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
-#capture-btn { width: 75px; height: 75px; border-radius: 50%; background: #fff; border: 6px solid rgba(255,255,255,0.2); transition: 0.2s; }
-#capture-btn.ready { 
-    border-color: #34C759; /* Рамка остается на 100% непрозрачной */
-    background: rgba(255, 255, 255, 0.6); /* А вот фон становится полупрозрачным белым */
-    transform: scale(1.1); 
+
+#capture-btn {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: #fff;
+    border: 6px solid rgba(255, 255, 255, 0.2);
+    transition: 0.2s;
 }
-#capture-btn:disabled { opacity: 0.3; }
+
+#capture-btn.ready {
+    border-color: #34C759;
+    /* Рамка остается на 100% непрозрачной */
+    background: rgba(255, 255, 255, 0.6);
+    /* А вот фон становится полупрозрачным белым */
+    transform: scale(1.1);
+}
+
+#capture-btn:disabled {
+    opacity: 0.3;
+}
 
 /* Общие стили для боковых кнопок: убираем ублюдочные фоны */
-.side-btn { 
-    width: 48px; 
-    height: 48px; 
+.side-btn {
+    width: 48px;
+    height: 48px;
     background: transparent;
-    border: none; 
+    border: none;
     cursor: pointer;
     transition: opacity 0.2s;
     /* УБИРАЕМ СЕРЫЙ/СИНИЙ КВАДРАТ ПРИ КЛИКЕ НА ТЕЛЕФОНЕ: */
-    -webkit-tap-highlight-color: transparent; 
-    outline: none; 
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
+
 .side-btn:active {
     opacity: 0.5;
 }
 
 /* ИКОНКА ГАЛЕРЕИ (в стиле iOS: скругленный квадрат) */
-#gallery-btn { 
-    border-radius: 10px; /* Аккуратный скругленный квадрат, а не круг */
-    background-color: rgba(0, 0, 0, 0.4); /* Чуть затемненный фон, если пусто */
-    border: 1px solid rgba(255, 255, 255, 0.3); /* Очень тонкая, деликатная рамка вместо белого обруча */
-    background-size: cover; 
-    background-position: center; 
-    overflow: hidden; 
+#gallery-btn {
+    border-radius: 10px;
+    /* Аккуратный скругленный квадрат, а не круг */
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Чуть затемненный фон, если пусто */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Очень тонкая, деликатная рамка вместо белого обруча */
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
 }
+
 /* Векторная иконка "картинка" (показывается, пока нет фото) */
-#gallery-btn:not(.has-photo) { 
+#gallery-btn:not(.has-photo) {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.8)' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z'/%3E%3C/svg%3E");
     background-size: 26px;
     background-repeat: no-repeat;
 }
+
 /* Убиваем старый эмодзи */
-#gallery-btn:not(.has-photo)::after { content: none; }
+#gallery-btn:not(.has-photo)::after {
+    content: none;
+}
 
 
 /* ИКОНКА СМЕНЫ КАМЕРЫ (минималистичная) */
@@ -225,44 +391,77 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     /* Легкая тень, чтобы белую иконку было видно даже на светлом фоне (футболке/стене) */
-    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.6));
 }
+
 /* Убиваем старый эмодзи */
-#switch-cam-btn::after { content: none; }
+#switch-cam-btn::after {
+    content: none;
+}
+
 /* ГАЛЕРЕЯ (ИСПРАВЛЕННЫЙ ГРИД) */
-#gallery-screen { 
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-    background: #000; z-index: 400; display: flex; flex-direction: column; 
-}
-.gallery-header { 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 20px; border-bottom: 1px solid #222; 
-}
-
-#gallery-grid { 
-    flex: 1; 
-    padding: 10px; 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); /* Строго 3 колонки */
-    gap: 8px; 
-    overflow-y: auto; 
-    width: 100%; 
-    align-content: start; /* Прижимает элементы к верху */
+#gallery-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
 }
 
-.gallery-item { 
-    width: 100%; 
-    aspect-ratio: 1 / 1; /* Квадратные превью (как в Instagram) — ничего не «ползет» */
-    background-size: cover; 
-    background-position: center; 
-    border-radius: 8px; 
-    border: 3px solid transparent; 
+.gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #222;
+}
+
+#gallery-grid {
+    flex: 1;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* Строго 3 колонки */
+    gap: 8px;
+    overflow-y: auto;
+    width: 100%;
+    align-content: start;
+    /* Прижимает элементы к верху */
+}
+
+.gallery-item {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    /* Квадратные превью (как в Instagram) — ничего не «ползет» */
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    border: 3px solid transparent;
     transition: border-color 0.2s;
 }
 
-.gallery-item.selected { border-color: #34C759; }
-#send-photo-btn { margin: 20px; padding: 18px; background: #34C759; color: #fff; border: none; border-radius: 14px; font-weight: bold; font-size: 17px; }
-#send-photo-btn:disabled { opacity: 0.3; }
+.gallery-item.selected {
+    border-color: #34C759;
+}
+
+#send-photo-btn {
+    margin: 20px;
+    padding: 18px;
+    background: #34C759;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-weight: bold;
+    font-size: 17px;
+}
+
+#send-photo-btn:disabled {
+    opacity: 0.3;
+}
 
 /* ПЕРЕКЛЮЧАТЕЛЬ ПОЛА */
 .gender-toggle {
@@ -270,19 +469,22 @@ body {
     background: #1c1c1e;
     border: 1px solid #333;
     border-radius: 12px;
-    overflow: hidden; /* Чтобы края кнопок не вылезали за скругления */
+    overflow: hidden;
+    /* Чтобы края кнопок не вылезали за скругления */
     margin-bottom: 12px;
 }
 
 .gender-toggle input[type="radio"] {
-    display: none; /* Прячем стандартные кружочки */
+    display: none;
+    /* Прячем стандартные кружочки */
 }
 
 .gender-toggle label {
     flex: 1;
     text-align: center;
     padding: 15px;
-    color: #888; /* Тусклый текст для неактивной кнопки */
+    color: #888;
+    /* Тусклый текст для неактивной кнопки */
     font-size: 17px;
     cursor: pointer;
     transition: all 0.2s;
@@ -290,21 +492,24 @@ body {
 }
 
 /* Стили для выбранного пола */
-.gender-toggle input[type="radio"]:checked + label {
-    background: #34C759; /* Твой фирменный зеленый */
+.gender-toggle input[type="radio"]:checked+label {
+    background: #34C759;
+    /* Твой фирменный зеленый */
     color: #fff;
     font-weight: bold;
 }
+
 /* ТУМБЛЕР ПОМОЩНИКА */
 .helper-switch {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #1c1c1e; 
+    background: #1c1c1e;
     padding: 15px;
     border-radius: 12px;
     border: 1px solid #333;
-    margin-bottom: 25px; /* Отступ перед кнопкой НАЧАТЬ */
+    margin-bottom: 25px;
+    /* Отступ перед кнопкой НАЧАТЬ */
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
 }
@@ -328,7 +533,8 @@ body {
 
 /* Сам ползунок */
 .helper-switch input {
-    display: none; /* Прячем стандартный чекбокс */
+    display: none;
+    /* Прячем стандартный чекбокс */
 }
 
 .helper-switch .slider {
@@ -338,7 +544,8 @@ body {
     background-color: #333;
     border-radius: 30px;
     transition: 0.3s;
-    flex-shrink: 0; /* Чтобы тумблер не сжимался */
+    flex-shrink: 0;
+    /* Чтобы тумблер не сжимался */
 }
 
 .helper-switch .slider:before {
@@ -351,65 +558,89 @@ body {
     background-color: #fff;
     border-radius: 50%;
     transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Состояние "Включено" */
-.helper-switch input:checked + .slider {
+.helper-switch input:checked+.slider {
     background-color: #34C759;
 }
 
-.helper-switch input:checked + .slider:before {
+.helper-switch input:checked+.slider:before {
     transform: translateX(20px);
 }
 
 /* --- --- ЭКРАН ПРЕДПРОСМОТРА (Обновлённый, парящий вид) --- --- */
 #preview-screen {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: #000;
-    z-index: 100; /* Должен перекрывать всё */
-    display: flex; flex-direction: column;
-    overflow: hidden; /* Чтобы изображение не вылезало за края */
+    z-index: 100;
+    /* Должен перекрывать всё */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Чтобы изображение не вылезало за края */
 }
 
 /* Изображение на весь экран (как фон) */
 #preview-image {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover; /* Заполняет экран без искажений */
-    z-index: 101; /* Изображение под кнопками */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Заполняет экран без искажений */
+    z-index: 101;
+    /* Изображение под кнопками */
 }
 
 /* Плашка кнопок "парит" поверх изображения снизу */
 .preview-controls {
-    position: absolute; bottom: 0; left: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    height: 160px; /* Высота парящей зоны */
-    z-index: 102; /* Кнопки сверху */
-    
+    height: 160px;
+    /* Высота парящей зоны */
+    z-index: 102;
+    /* Кнопки сверху */
+
     /* Затемняющий градиент снизу для читаемости кнопок на светлых фото */
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
-    backdrop-filter: blur(3px); /* Легкое размытие фото под плашкой */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+    backdrop-filter: blur(3px);
+    /* Легкое размытие фото под плашкой */
     -webkit-backdrop-filter: blur(3px);
 
     display: flex;
-    flex-direction: row; /* Явно задаём горизонтальное расположение (боком) */
+    flex-direction: row;
+    /* Явно задаём горизонтальное расположение (боком) */
     justify-content: center;
-    align-items: center; /* Центрируем кнопки по вертикали внутри зоны */
-    gap: 15px; /* Промежуток между кнопками */
-    padding: 0 25px; /* Отступы от краёв экрана */
-    
+    align-items: center;
+    /* Центрируем кнопки по вертикали внутри зоны */
+    gap: 15px;
+    /* Промежуток между кнопками */
+    padding: 0 25px;
+    /* Отступы от краёв экрана */
+
     /* Учёт "чёлки" (safe area) на современных iOS и Android */
-    padding-bottom: env(safe-area-inset-bottom, 25px); 
-    pointer-events: auto; /* Разрешаем клики */
+    padding-bottom: env(safe-area-inset-bottom, 25px);
+    pointer-events: auto;
+    /* Разрешаем клики */
 }
 
 /* --- Стилизация самих кнопок --- */
 .action-btn {
-    flex: 1; /* Кнопки делят ширину пополам, становясь одинаковыми */
-    height: 54px; /* Удобная высота для нажатия пальцем */
-    border-radius: 14px; /* Скругление как в анкете */
+    flex: 1;
+    /* Кнопки делят ширину пополам, становясь одинаковыми */
+    height: 54px;
+    /* Удобная высота для нажатия пальцем */
+    border-radius: 14px;
+    /* Скругление как в анкете */
     font-size: 17px;
     font-weight: 600;
     border: none;
@@ -420,49 +651,64 @@ body {
 }
 
 .action-btn:active {
-    transform: scale(0.96); /* Эффект нажатия (сжатие) */
+    transform: scale(0.96);
+    /* Эффект нажатия (сжатие) */
     opacity: 0.8;
 }
 
 /* Кнопка Переснять (Второстепенная, молочно-полупрозрачная) */
 .secondary-btn {
-    background: rgba(255, 255, 255, 0.15); /* Легкий белый фон */
+    background: rgba(255, 255, 255, 0.15);
+    /* Легкий белый фон */
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 .secondary-btn:hover {
     background: rgba(255, 255, 255, 0.25);
 }
 
 /* Кнопка Дальше / ОТПРАВИТЬ (Главная, зелёная) */
 /* Мы объединили эти стили, так как base color одинаковый */
-.primary-btn, .send-btn {
-    background: #34C759; /* Твой фирменный зелёный */
+.primary-btn,
+.send-btn {
+    background: #34C759;
+    /* Твой фирменный зелёный */
     color: #fff;
     /* Яркое зелёное свечение, чтобы выделить главную кнопку */
-    box-shadow: 0 4px 20px rgba(52, 199, 89, 0.4); 
+    box-shadow: 0 4px 20px rgba(52, 199, 89, 0.4);
 }
 
-.primary-btn:hover, .send-btn:hover {
+.primary-btn:hover,
+.send-btn:hover {
     background: #30b852;
 }
 
 /* --- Анимированные спецэффекты для финальной кнопки "ОТПРАВИТЬ" --- */
 .send-btn {
     /* Финальная кнопка пульсирует, привлекая внимание */
-    animation: sendPulse 1.8s infinite; 
+    animation: sendPulse 1.8s infinite;
 }
 
 @keyframes sendPulse {
-    0% { box-shadow: 0 0 15px rgba(52, 199, 89, 0.4); }
-    50% { box-shadow: 0 0 30px rgba(52, 199, 89, 0.7); }
-    100% { box-shadow: 0 0 15px rgba(52, 199, 89, 0.4); }
+    0% {
+        box-shadow: 0 0 15px rgba(52, 199, 89, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(52, 199, 89, 0.7);
+    }
+
+    100% {
+        box-shadow: 0 0 15px rgba(52, 199, 89, 0.4);
+    }
 }
 
 /* ИНДИКАТОР ШАГОВ (Вверху экрана) */
 #step-indicator {
     position: absolute;
-    top: max(55px, env(safe-area-inset-top)); /* Учитывает челку iPhone */
+    top: max(55px, env(safe-area-inset-top));
+    /* Учитывает челку iPhone */
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.6);
@@ -479,13 +725,107 @@ body {
 
 /* --- ОТКРЫВАЮЩИЙ ЭКРАН ОТПРАВКИ (OVERLAY) --- */
 #sending-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.6); z-index: 1000; padding: env(safe-area-inset-top) 20px calc(env(safe-area-inset-bottom) + 20px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    padding: env(safe-area-inset-top) 20px calc(env(safe-area-inset-bottom) + 20px);
 }
+
 .sending-card {
-    width: 92%; max-width: 520px; background: linear-gradient(180deg, rgba(20,20,20,0.98), rgba(12,12,12,0.98));
-    border-radius: 14px; padding: 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    color: #fff; display: flex; flex-direction: column; gap: 12px; align-items: center;
+    width: 92%;
+    max-width: 520px;
+    background: linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(12, 12, 12, 0.98));
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
 }
-.sending-summary, .sending-exercises { width: 100%; text-align: left; color: rgba(255,255,255,0.9); }
+
+.sending-summary,
+.sending-exercises {
+    width: 100%;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ПОЛНОЭКРАННЫЙ ЧЕРНЫЙ СПЛЭШ  */
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #050505;
+    /* Глубокий черный */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+}
+
+/* Центрирование контента */
+.splash-center {
+    text-align: left;
+    /* Важно для архитектурного стека */
+}
+
+/* Главный логотип */
+.splash-logo {
+    font-family: 'Inter', 'SF Pro Display', sans-serif;
+    /* Геометрический гротеск */
+    font-size: 42px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.1;
+    margin: 0 0 15px 0;
+    letter-spacing: 1px;
+}
+
+/* Неоновый терминальный курсор */
+.neon-cursor {
+    color: #39FF14;
+    /* Тот самый зеленый */
+    animation: blink 1s step-end infinite;
+}
+
+/* Подзаголовок */
+.splash-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #7A8B99;
+    /* Серо-голубой, как в твоем отчете */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+/* Класс для плавного исчезновения */
+#splash-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Анимация мигания курсора */
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
