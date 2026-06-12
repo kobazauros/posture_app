@@ -205,7 +205,7 @@ export function sendPhotosToServer() {
             // Close session immediately after the server accepted the upload.
             // This is the actual lifecycle boundary for the capture session.
             try {
-                const closeResponse = await fetch('/session/close', {
+                const closeResponse = await fetch('session/close', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session_id: state.sessionId, client_id: state.clientId }),
@@ -237,9 +237,9 @@ export function sendPhotosToServer() {
                 });
                 if (navigator && typeof navigator.sendBeacon === 'function') {
                     const blob = new Blob([body], { type: 'application/json' });
-                    navigator.sendBeacon('/debug/log', blob);
+                    navigator.sendBeacon('debug/log', blob);
                 } else {
-                    fetch('/debug/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() => {});
+                    fetch('debug/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() => {});
                 }
             } catch (err) {
                 // ignore

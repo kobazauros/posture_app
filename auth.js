@@ -116,7 +116,7 @@ export async function initializeAuthSession() {
     // Proceed to attempt restore/claim for this client.
 
     try {
-        const restoredResponse = await fetch('/session/restore', {
+        const restoredResponse = await fetch('session/restore', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ client_id: state.clientId }),
@@ -148,7 +148,7 @@ export async function initializeAuthSession() {
     }
 
     try {
-        const response = await fetch('/session/claim', {
+        const response = await fetch('session/claim', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: state.token, client_id: state.clientId }),

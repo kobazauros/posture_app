@@ -138,7 +138,7 @@ async function handleRoleSelection(role) {
     if (btn) btn.disabled = true;
 
     try {
-        const response = await fetch('/user/register', {
+        const response = await fetch('user/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
