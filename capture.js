@@ -1,5 +1,5 @@
-import { state, stepLabels } from './state.js?v=4';
-import { sendPhotosToServer } from './upload.js?v=4';
+import { state, stepLabels } from './state.js?v=5';
+import { sendPhotosToServer } from './upload.js?v=5';
 
 /**
  * Updates the visible step label for the capture flow.

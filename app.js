@@ -1,13 +1,13 @@
 /**
  * Application bootstrap that wires together auth, form, camera, and capture modules.
  */
-import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=4';
-import { attachFormValidation, validateForm } from './form.js?v=4';
-import { startCamera, switchCameraFacing } from './camera.js?v=4';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=4';
-import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=4';
-import { initDetector } from './detector.js?v=4';
-import { closeOrRedirect } from './upload.js?v=4';
+import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=5';
+import { attachFormValidation, validateForm } from './form.js?v=5';
+import { startCamera, switchCameraFacing } from './camera.js?v=5';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=5';
+import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=5';
+import { initDetector } from './detector.js?v=5';
+import { closeOrRedirect } from './upload.js?v=5';
 
 bootstrapAuthFromUrl();
 getOrCreateClientId();
@@ -103,7 +103,7 @@ async function routeUser() {
                 if (window.Telegram && window.Telegram.WebApp) {
                     window.Telegram.WebApp.close();
                 } else {
-                    window.location.href = `https://t.me/${TELEGRAM_BOT_USERNAME}`;
+                    window.location.href = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=1`;
                 }
             });
         }

@@ -51,6 +51,19 @@ def reset_mini_app_interface():
     except Exception as e:
         logger.error(f"Ошибка при сбросе кнопки меню: {e}")
 
+def setup_bot_commands():
+    """Устанавливает меню команд бота"""
+    commands = [
+        types.BotCommand("start", "Начать анализ (получить новую ссылку)"),
+        types.BotCommand("help", "Справка по системе"),
+        types.BotCommand("id", "Ваш Telegram ID")
+    ]
+    try:
+        bot.set_my_commands(commands)
+        logger.info("Меню команд успешно обновлено.")
+    except Exception as e:
+        logger.error(f"Ошибка при установке команд: {e}")
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     """
@@ -113,6 +126,7 @@ def show_help(message):
 if __name__ == "__main__":
     # Выполняем сброс настроек Mini App при каждом запуске
     reset_mini_app_interface()
+    setup_bot_commands()
     
     print("------------------------------------------")
     print(f"🚀 Бот запущен в режиме ЧИСТОГО ВЕБ-КУРЬЕРА")
