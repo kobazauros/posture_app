@@ -79,9 +79,8 @@ def send_welcome(message):
     
     # Формируем ссылку с ID пользователя для идентификации на сервере
     clean_url = WEB_URL.rstrip('/')
-    # Добавляем cb (cache-buster), чтобы Telegram не использовал старый кэш окна (где был белый фон)
-    cb = int(time.time())
-    personal_link = f"{clean_url}/?t={secure_token}&cb={cb}"
+    # Меняем ссылку на v=2, чтобы навсегда закэшировать черный цвет в Telegram, но при этом использовать мгновенный кэш
+    personal_link = f"{clean_url}/?t={secure_token}&v=2"
     
     # Создаем клавиатуру с кнопкой-ссылкой (url= заставляет открыть внешний браузер)
     markup = types.InlineKeyboardMarkup()
