@@ -137,12 +137,12 @@ export async function initializeAuthSession() {
                 url.searchParams.delete('t');
                 window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
                 setAuthState(true, 'НАЧАТЬ');
-                
+
                 // Save state
                 state.isRegistered = payload.is_registered;
                 state.role = payload.role;
                 state.firstName = payload.first_name;
-                
+
                 return payload;
             } else {
                 console.warn('[auth] session claim failed', payload);
@@ -169,12 +169,12 @@ export async function initializeAuthSession() {
                 console.warn('[auth] unable to persist restored session id', err);
             }
             setAuthState(true, 'НАЧАТЬ');
-            
+
             // Save state
             state.isRegistered = restoredPayload.is_registered;
             state.role = restoredPayload.role;
             state.firstName = restoredPayload.first_name;
-            
+
             return restoredPayload;
         }
     } catch (err) {
