@@ -243,9 +243,15 @@
         </div>
     </div>
 
+    <div id="error-screen" style="display: none; align-items: center; justify-content: center; height: 100vh; flex-direction: column; background-color: #111;">
+        <h2 style="color: white; margin-bottom: 20px;">Ошибка авторизации</h2>
+        <p style="color: #ccc; text-align: center; margin-bottom: 30px; font-size: 16px; padding: 0 20px;">Ссылка недействительна или устарела.<br><br>Пожалуйста, вернитесь в Telegram и нажмите /start для получения новой ссылки.</p>
+        <button id="close-error-btn" class="action-btn primary-btn" style="width: 200px;">Вернуться в Telegram</button>
+    </div>
+
     <canvas id="capture-canvas" style="display:none;"></canvas>
 
-    <script type="module" src="app.js?v=3"></script>
+    <script type="module" src="app.js?v=4"></script>
 </body>
 
 </html>

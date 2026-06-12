@@ -1,13 +1,13 @@
 /**
  * Application bootstrap that wires together auth, form, camera, and capture modules.
  */
-import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=3';
-import { attachFormValidation, validateForm } from './form.js?v=3';
-import { startCamera, switchCameraFacing } from './camera.js?v=3';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=3';
-import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=3';
-import { initDetector } from './detector.js?v=3';
-import { closeOrRedirect } from './upload.js?v=3';
+import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=4';
+import { attachFormValidation, validateForm } from './form.js?v=4';
+import { startCamera, switchCameraFacing } from './camera.js?v=4';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=4';
+import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=4';
+import { initDetector } from './detector.js?v=4';
+import { closeOrRedirect } from './upload.js?v=4';
 
 bootstrapAuthFromUrl();
 getOrCreateClientId();
@@ -95,7 +95,22 @@ async function routeUser() {
         if (el) el.style.display = 'flex';
     };
 
-    if (!authData || !authData.is_registered) {
+    if (authData === false) {
+        showScreen('error-screen');
+        const closeErrorBtn = document.getElementById('close-error-btn');
+        if (closeErrorBtn) {
+            closeErrorBtn.addEventListener('click', () => {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.close();
+                } else {
+                    window.location.href = `https://t.me/${TELEGRAM_BOT_USERNAME}`;
+                }
+            });
+        }
+        return;
+    }
+
+    if (!authData.is_registered) {
         showScreen('onboarding-screen');
     } else {
         const greetingText = document.getElementById('greeting-text');
