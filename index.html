@@ -112,7 +112,13 @@
     <noscript><link rel="stylesheet" href="style.css"></noscript>
 </head>
 
-<body style="background-color: #000;">
+<body style="background-color: #000; margin: 0; padding: 0; width: 100%; height: 100%;">
+    <!-- Простой индикатор загрузки для мгновенного рендера (по рекомендации) -->
+    <div id="preloader" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#050505; z-index:999999; display:flex; justify-content:center; align-items:center;">
+        <div style="border:4px solid #222; border-top:4px solid #34C759; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;"></div>
+    </div>
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+
     <div id="splash-screen">
         <div class="splash-center">
             <h1 class="splash-logo">

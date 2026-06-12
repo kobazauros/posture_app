@@ -9,6 +9,10 @@ import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=8';
 import { initDetector } from './detector.js?v=8';
 import { closeOrRedirect } from './upload.js?v=8';
 
+// Скрываем мгновенный прелоадер, как только скрипт начал работу
+const preloader = document.getElementById('preloader');
+if (preloader) preloader.style.display = 'none';
+
 bootstrapAuthFromUrl();
 getOrCreateClientId();
 attachFormValidation();
