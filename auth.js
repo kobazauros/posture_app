@@ -67,6 +67,8 @@ export function bootstrapAuthFromUrl() {
     if (state.token) {
         try {
             sessionStorage.setItem(TOKEN_STORAGE_KEY, state.token);
+            // Wipe any stale session that belonged to a previous (possibly different) account.
+            sessionStorage.removeItem(SESSION_STORAGE_KEY);
         } catch (err) {
             console.warn('[auth] unable to persist token in sessionStorage', err);
         }
@@ -106,15 +108,18 @@ export function setAuthState(enabled, message) {
  * @returns {Promise<Object|boolean>} Authentication payload or false.
  */
 export async function initializeAuthSession() {
-    if (state.sessionId) {
-        setAuthState(true, 'НАЧАТЬ');
-        // We might not have the full payload here if just checking sessionId existence,
-        // but typically this early return is only during fast reloads.
-        return { session_id: state.sessionId, is_registered: state.isRegistered, role: state.role, first_name: state.firstName };
-    }
-
-    // Prioritize token claim if a token is present in the state
+    // Prioritize token claim if a token is present in the state.
+    // IMPORTANT: always claim a new token even if a sessionId is already cached —
+    // this handles the dual-SIM / dual-account case where two different Telegram
+    // accounts open different links on the same device. Without this check the
+    // second account would silently inherit the first account's session.
     if (state.token) {
+        // Clear any previously cached session — a new token means a new (possibly
+        // different) account is signing in on this device.
+        state.sessionId = null;
+        try {
+            sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch (_) { /* ignore */ }
         try {
             const response = await fetch('session/claim', {
                 method: 'POST',
@@ -146,10 +151,22 @@ export async function initializeAuthSession() {
                 return payload;
             } else {
                 console.warn('[auth] session claim failed', payload);
+                // If a token was provided but failed to claim, DO NOT fall back to restore.
+                // This prevents a second Telegram account from inheriting the first account's session.
+                return false;
             }
         } catch (err) {
             console.warn('[auth] session claim request failed', err);
+            return false;
         }
+    }
+
+    // No new token in URL — if we already have a valid sessionId in memory
+    // (e.g. fast page reload within the same browser tab / Telegram session),
+    // return it immediately without hitting the network.
+    if (state.sessionId) {
+        setAuthState(true, 'НАЧАТЬ');
+        return { session_id: state.sessionId, is_registered: state.isRegistered, role: state.role, first_name: state.firstName };
     }
 
     // Proceed to attempt restore for this client if no token or claim failed.

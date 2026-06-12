@@ -1,13 +1,13 @@
 /**
  * Application bootstrap that wires together auth, form, camera, and capture modules.
  */
-import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js';
-import { attachFormValidation, validateForm } from './form.js';
-import { startCamera, switchCameraFacing } from './camera.js';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js';
-import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js';
-import { initDetector } from './detector.js';
-import { closeOrRedirect } from './upload.js';
+import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=2';
+import { attachFormValidation, validateForm } from './form.js?v=2';
+import { startCamera, switchCameraFacing } from './camera.js?v=2';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=2';
+import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=2';
+import { initDetector } from './detector.js?v=2';
+import { closeOrRedirect } from './upload.js?v=2';
 
 bootstrapAuthFromUrl();
 getOrCreateClientId();
