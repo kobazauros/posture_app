@@ -17,7 +17,7 @@ body {
 /* Применяем правильный расчет размеров ко всем элементам */
 
 /* АНКЕТА */
-#form-screen {
+.screen {
     position: fixed;
     top: 0;
     left: 0;
@@ -836,4 +836,21 @@ body {
     50% {
         opacity: 0;
     }
+}
+
+.splash-progress {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 20px auto 0; /* Center it below logo */
+    overflow: hidden;
+}
+
+.splash-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--neon-cyan, #00f0ff);
+    /* Анимация плавно идет 10 секунд до 90% */
+    transition: width 10s cubic-bezier(0.1, 0.7, 0.1, 1);
 }

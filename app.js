@@ -7,6 +7,7 @@ import { startCamera, switchCameraFacing } from './camera.js';
 import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js';
 import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js';
 import { initDetector } from './detector.js';
+import { closeOrRedirect } from './upload.js';
 
 bootstrapAuthFromUrl();
 getOrCreateClientId();
@@ -16,34 +17,54 @@ updateStepIndicator();
 
 // 🔥 Логика работы Splash Screen
 (function showSplashScreen() {
+    // Временно скрываем основной экран с анкетой
+    const formScreen = document.getElementById('form-screen');
+    if (formScreen) formScreen.style.display = 'none';
     function removeSplash() {
         const splash = document.getElementById('splash-screen');
         if (!splash) return;
         // Проверяем, загружал ли пользователь ИИ ранее
         const isCached = localStorage.getItem('mediapipe_cached');
+        const progressBarContainer = document.getElementById('splash-progress');
+        const progressBar = document.getElementById('splash-progress-bar');
 
         if (!isCached) {
+            if (progressBarContainer) progressBarContainer.style.display = 'block';
+            
+            // Fake progress animation up to 90%
+            setTimeout(() => {
+                if (progressBar) progressBar.style.width = '90%';
+            }, 50);
+
             const loadAI = initDetector().then(() => {
                 localStorage.setItem('mediapipe_cached', 'true');
+                if (progressBar) {
+                    progressBar.style.transition = 'width 0.4s ease-out';
+                    progressBar.style.width = '100%';
+                }
             }).catch(err => console.error('[Splash] Ошибка загрузки ИИ:', err));
 
             const minTime = new Promise(resolve => setTimeout(resolve, 1500));
 
             Promise.all([loadAI, minTime]).then(() => {
-                splash.classList.add('fade-out');
-                setTimeout(() => splash.remove(), 600);
+                setTimeout(() => { // Give it a moment to show 100%
+                    splash.classList.add('fade-out');
+                    setTimeout(() => {
+                        splash.style.display = 'none';
+                        routeUser();
+                    }, 600);
+                }, 300);
             });
         } else {
-            const logo = splash.querySelector('.splash-logo');
-            if (logo) {
-                logo.innerHTML = 'SESSION<br>RESTORED<span class="neon-cursor">&#9608;</span>';
-            }
+            // При повторном запуске просто показываем логотип короткое время и убираем
             setTimeout(() => {
                 splash.classList.add('fade-out');
                 setTimeout(() => {
-                    splash.remove();
+                    splash.style.display = 'none';
+                    routeUser();
                 }, 600);
             }, 800);
+            
             // Распаковываем ИИ в фоне (из кэша достанет мгновенно, но WASM нужно развернуть)
             // Даем небольшую паузу (1 сек), чтобы UI формы успел отрисоваться без лагов
             setTimeout(() => {
@@ -54,6 +75,115 @@ updateStepIndicator();
 
     removeSplash();
 })();
+
+// --- ЛОГИКА РОУТИНГА С БАЗОЙ ДАННЫХ ---
+async function routeUser() {
+    const authData = await initializeAuthSession();
+    
+    const showScreen = (id) => {
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    };
+
+    if (!authData || !authData.is_registered) {
+        showScreen('onboarding-screen');
+    } else {
+        const greetingText = document.getElementById('greeting-text');
+        if (greetingText && authData.first_name) {
+            greetingText.textContent = `Здравствуйте, ${authData.first_name}!`;
+        }
+        
+        showScreen('greeting-screen');
+        
+        setTimeout(() => {
+            if (['client', 'admin'].includes(authData.role)) {
+                showScreen('form-screen');
+            } else if (['specialist-pending', 'specialist-approved'].includes(authData.role)) {
+                showScreen('pending-verification-screen');
+                if (authData.role === 'specialist-pending') {
+                    // Start redirect timer for specialists
+                    setTimeout(() => closeOrRedirect(), 8000);
+                }
+            } else {
+                // Default fallback if role is unrecognized or refused
+                showScreen('onboarding-screen');
+            }
+        }, 1500);
+    }
+}
+// 🔥 Логика кнопок Онбординга (регистрации)
+async function handleRoleSelection(role) {
+    const firstNameInput = document.getElementById('user-firstname');
+    const lastNameInput = document.getElementById('user-lastname');
+    const errorFirst = document.getElementById('firstname-error');
+    const errorLast = document.getElementById('lastname-error');
+    errorFirst.textContent = '';
+    errorLast.textContent = '';
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+    
+    // Валидация
+    if (!firstName) {
+        errorFirst.textContent = 'Пожалуйста, введите Имя.';
+        return;
+    }
+    if (!lastName) {
+        errorLast.textContent = 'Пожалуйста, введите Фамилию.';
+        return;
+    }
+    
+    // Disable button to prevent double-submit
+    const btn = document.getElementById('submit-onboarding-btn');
+    if (btn) btn.disabled = true;
+    
+    try {
+        const response = await fetch('/user/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: state.sessionId,
+                first_name: firstName,
+                last_name: lastName,
+                role: role // 'patient' or 'doctor' from UI
+            })
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            // Update local state
+            state.isRegistered = true;
+            state.firstName = firstName;
+            state.role = result.role; // Real DB role ('client' or 'specialist-pending')
+            
+            // Скрываем онбординг
+            document.getElementById('onboarding-screen').style.display = 'none';
+            
+            if (['client', 'admin'].includes(state.role)) {
+                document.getElementById('form-screen').style.display = 'flex';
+            } else {
+                document.getElementById('pending-verification-screen').style.display = 'flex';
+                // Вызываем ту же логику (closeOrRedirect), что и при успешной отправке фото
+                setTimeout(() => {
+                    closeOrRedirect();
+                }, 5000);
+            }
+        } else {
+            alert('Ошибка регистрации: ' + (result.message || 'Неизвестная ошибка'));
+        }
+    } catch (err) {
+        console.error('Registration failed:', err);
+        alert('Ошибка сети при регистрации. Проверьте подключение.');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+// Привязываем клик к новой кнопке "ПРОДОЛЖИТЬ"
+document.getElementById('submit-onboarding-btn')?.addEventListener('click', () => {
+    // Узнаем, какой переключатель выбран (patient или doctor)
+    const selectedRole = document.querySelector('input[name="role-selection"]:checked').value;
+    handleRoleSelection(selectedRole);
+});
 
 
 /**

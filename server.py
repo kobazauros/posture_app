@@ -16,6 +16,10 @@ except Exception:
 
 from service import generate_pdf_from_analysis, deliver_pdf_to_telegram
 from security import decode_token, claim_token, restore_session, validate_session
+from routes.auth_routes import auth_bp
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__, static_folder='.')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
@@ -35,88 +39,8 @@ def index():
     """Serve the main client application."""
     return send_from_directory('.', 'index.html')
 
-
-@app.route('/session/claim', methods=['POST'])
-def claim_session():
-    """Claim a Telegram token for the current client session."""
-    data = request.json or {}
-    token = data.get('token')
-    client_id = data.get('client_id')
-    if not token:
-        return jsonify({'status': 'error', 'message': 'No token provided'}), 400
-
-    # If the token decodes but was already claimed, and it was claimed by the same
-    # client_id, return the existing session instead of erroring out. This prevents
-    # creating multiple sessions when the user reopens the camera in another
-    # window/tab for the same device.
-    from security import load_session_registry
-    try:
-        # Decode token to obtain user_id for registry lookup
-        user_id_decoded, _ = decode_token(token)
-    except Exception:
-        user_id_decoded = None
-
-    if user_id_decoded:
-        registry = load_session_registry()
-        entry = registry.get(user_id_decoded) if isinstance(registry, dict) else None
-        if isinstance(entry, dict) and entry.get('claimed') and entry.get('session_id'):
-            # If token belongs to a user who already has a claimed session, prefer
-            # returning that existing session instead of creating a new one.
-            # If the client_id differs, update it to reflect the current client.
-            if client_id and entry.get('client_id') != client_id:
-                entry['client_id'] = client_id
-                registry[user_id_decoded] = entry
-                try:
-                    from security import save_session_registry
-                    save_session_registry(registry)
-                except Exception:
-                    pass
-            return jsonify({'status': 'success', 'user_id': user_id_decoded, 'session_id': entry.get('session_id')})
-
-    # Not claimed yet: attempt to claim normally.
-    user_id, session_id = claim_token(token, client_id=client_id)
-    if not user_id or not session_id:
-        return jsonify({'status': 'error', 'message': 'Token already used or invalid. Request a new Telegram link.'}), 403
-
-    return jsonify({'status': 'success', 'user_id': user_id, 'session_id': session_id})
-
-
-@app.route('/session/restore', methods=['POST'])
-def restore_existing_session():
-    """Restore an existing session for a remembered client id."""
-    data = request.json or {}
-    client_id = data.get('client_id')
-    if not client_id:
-        return jsonify({'status': 'error', 'message': 'No client id provided'}), 400
-
-    user_id, session_id = restore_session(client_id)
-    if not user_id or not session_id:
-        return jsonify({'status': 'error', 'message': 'No existing session'}), 404
-
-    return jsonify({'status': 'success', 'user_id': user_id, 'session_id': session_id})
-
-
-@app.route('/session/close', methods=['POST'])
-def close_session():
-    """Close a claimed session by session_id or client_id and remove it from the registry."""
-    data = request.json or {}
-    session_id = data.get('session_id')
-    client_id = data.get('client_id')
-
-    closed = False
-    from security import close_session_by_session_id, close_session_by_client_id
-
-    logger.info('session/close called with session_id=%s client_id=%s', session_id, client_id)
-    if session_id:
-        closed = close_session_by_session_id(session_id)
-    elif client_id:
-        closed = close_session_by_client_id(client_id)
-    else:
-        return jsonify({'status': 'error', 'message': 'No session_id or client_id provided'}), 400
-
-    if closed:
-        return jsonify({'status': 'success'})
-    return jsonify({'status': 'error', 'message': 'Session not found or already closed'}), 404
+# Регистрируем роуты авторизации и работы с БД
+app.register_blueprint(auth_bp)
 
 # Раздача CSS и JS
 @app.route('/<path:path>')

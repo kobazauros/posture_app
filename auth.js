@@ -103,12 +103,14 @@ export function setAuthState(enabled, message) {
 
 /**
  * Restores or claims a backend session for the current client.
- * @returns {Promise<boolean>} True when a session is available.
+ * @returns {Promise<Object|boolean>} Authentication payload or false.
  */
 export async function initializeAuthSession() {
     if (state.sessionId) {
         setAuthState(true, 'НАЧАТЬ');
-        return true;
+        // We might not have the full payload here if just checking sessionId existence,
+        // but typically this early return is only during fast reloads.
+        return { session_id: state.sessionId, is_registered: state.isRegistered, role: state.role, first_name: state.firstName };
     }
 
     // Proceed to attempt restore/claim for this client.
@@ -129,7 +131,13 @@ export async function initializeAuthSession() {
                 console.warn('[auth] unable to persist restored session id', err);
             }
             setAuthState(true, 'НАЧАТЬ');
-            return true;
+            
+            // Save state
+            state.isRegistered = restoredPayload.is_registered;
+            state.role = restoredPayload.role;
+            state.firstName = restoredPayload.first_name;
+            
+            return restoredPayload;
         }
     } catch (err) {
         console.warn('[auth] session restore request failed', err);
@@ -165,7 +173,13 @@ export async function initializeAuthSession() {
         url.searchParams.delete('t');
         window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
         setAuthState(true, 'НАЧАТЬ');
-        return true;
+        
+        // Save state
+        state.isRegistered = payload.is_registered;
+        state.role = payload.role;
+        state.firstName = payload.first_name;
+        
+        return payload;
     } catch (err) {
         console.warn('[auth] session claim request failed', err);
         return false;

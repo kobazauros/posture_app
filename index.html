@@ -16,12 +16,55 @@
                 KÖRPER<br>
                 KORREKT<span class="neon-cursor">&#9608;</span>
             </h1>
+            <div id="splash-progress" class="splash-progress" style="display: none;">
+                <div id="splash-progress-bar" class="splash-progress-bar"></div>
+            </div>
         </div>
         <div class="splash-footer">
             <p>AI Biomechanics</p>
         </div>
     </div>
-    <div id="form-screen">
+    <!-- Экран приветствия (ТОЛЬКО для тех, кто уже есть в БД) -->
+    <div id="greeting-screen" class="screen" style="display:none;">
+        <div class="splash-center">
+            <h2 id="greeting-text" style="color: white; text-align: center;">Здравствуйте!</h2>
+        </div>
+    </div>
+    <div id="onboarding-screen" class="screen" style="display:none;">
+        <div class="form-container">
+            <h2>Здравствуйте!</h2>
+            <p style="text-align: center; font-weight: bold; margin: 9px 0 34px 0;">Давайте познакомимся. Как Вас
+                зовут?</p>
+            <div class="input-group">
+                <input type="text" id="user-firstname" placeholder="Имя" required>
+                <div class="field-error" id="firstname-error" aria-live="polite"></div>
+                <input type="text" id="user-lastname" placeholder="Фамилия" required>
+                <div class="field-error" id="lastname-error" aria-live="polite"></div>
+            </div>
+
+            <p style="text-align: center; font-weight: bold;  margin: 0px 0 34px 0;">Укажите Вашу роль:</p>
+            <div class=" gender-toggle">
+                <input type="radio" id="role-patient" name="role-selection" value="patient" checked>
+                <label for="role-patient">Клиент</label>
+                <input type="radio" id="role-doctor" name="role-selection" value="doctor">
+                <label for="role-doctor">Специалист</label>
+            </div>
+            <!-- Используем те же стили (inline), что и у главной кнопки НАЧАТЬ -->
+            <button id="submit-onboarding-btn"
+                style="width: 100%; padding: 18px; background: #34C759; color: #fff; border: none; border-radius: 14px; font-weight: bold; font-size: 17px; margin-top: 20px;">ПРОДОЛЖИТЬ</button>
+        </div>
+    </div>
+    <!-- Экран ожидания верификации (для врачей) -->
+    <div id="pending-verification-screen" class="screen" style="display:none;">
+        <div class="form-container" style="text-align: center;">
+            <h2>Запрос отправлен ⏳</h2>
+            <p style="color: var(--text-gray); margin-top: 15px; line-height: 2.0;">
+                Ваша заявка на получение статуса Врача отправлена администратору.
+                Мы пришлем вам уведомление в Telegram, как только доступ будет открыт.
+            </p>
+        </div>
+    </div>
+    <div id="form-screen" class="screen" style="display:none;">
         <div class="form-container">
             <h2>Анализ осанки</h2>
             <div class="input-group">
