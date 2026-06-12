@@ -4,7 +4,7 @@ import {
     TOKEN_STORAGE_KEY,
     state,
     url,
-} from './state.js';
+} from './state.js?v=3';
 
 /**
  * Reads a cookie value by name.
