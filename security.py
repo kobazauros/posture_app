@@ -155,6 +155,12 @@ def claim_token(token, client_id=None):
     entry["session_id"] = session_id
     if client_id:
         entry["client_id"] = client_id
+        # Remove this client_id from any other user's session to prevent account collision in the same browser
+        for other_id, other_entry in list(registry.items()):
+            if other_id != user_id and isinstance(other_entry, dict) and other_entry.get("client_id") == client_id:
+                other_entry["client_id"] = None
+                registry[other_id] = other_entry
+
     entry["claimed_at"] = int(time.time())
     registry[user_id] = entry
     save_session_registry(registry)

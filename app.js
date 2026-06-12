@@ -15,6 +15,12 @@ attachFormValidation();
 bindCaptureHandlers();
 updateStepIndicator();
 
+// 🔥 Начинаем загрузку данных пользователя НЕМЕДЛЕННО, параллельно со сплэшем
+const authPromise = initializeAuthSession().catch(err => {
+    console.warn('[auth] early init failed', err);
+    return false;
+});
+
 // 🔥 Логика работы Splash Screen
 (function showSplashScreen() {
     // Временно скрываем основной экран с анкетой
@@ -44,32 +50,34 @@ updateStepIndicator();
                 }
             }).catch(err => console.error('[Splash] Ошибка загрузки ИИ:', err));
 
-            const minTime = new Promise(resolve => setTimeout(resolve, 1500));
+            const minTime = new Promise(resolve => setTimeout(resolve, 1200));
 
-            Promise.all([loadAI, minTime]).then(() => {
-                setTimeout(() => { // Give it a moment to show 100%
+            // Ждём ИИ + авторизацию + минимальное время — всё параллельно
+            Promise.all([loadAI, authPromise, minTime]).then(() => {
+                setTimeout(() => {
                     splash.classList.add('fade-out');
                     setTimeout(() => {
                         splash.style.display = 'none';
                         routeUser();
-                    }, 600);
-                }, 300);
+                    }, 400);
+                }, 200);
             });
         } else {
-            // При повторном запуске просто показываем логотип короткое время и убираем
-            setTimeout(() => {
+            // Повторный запуск: ждём авторизацию + минимальное время показа лого
+            const minTime = new Promise(resolve => setTimeout(resolve, 300));
+
+            Promise.all([authPromise, minTime]).then(() => {
                 splash.classList.add('fade-out');
                 setTimeout(() => {
                     splash.style.display = 'none';
                     routeUser();
-                }, 600);
-            }, 800);
+                }, 400);
+            });
 
             // Распаковываем ИИ в фоне (из кэша достанет мгновенно, но WASM нужно развернуть)
-            // Даем небольшую паузу (1 сек), чтобы UI формы успел отрисоваться без лагов
             setTimeout(() => {
                 initDetector().catch(err => console.warn(err));
-            }, 1000);
+            }, 800);
         }
     }
 
@@ -78,7 +86,8 @@ updateStepIndicator();
 
 // --- ЛОГИКА РОУТИНГА С БАЗОЙ ДАННЫХ ---
 async function routeUser() {
-    const authData = await initializeAuthSession();
+    // authPromise уже resolved к этому моменту — await вернёт результат мгновенно
+    const authData = await authPromise;
 
     const showScreen = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
@@ -109,7 +118,7 @@ async function routeUser() {
                 // Default fallback if role is unrecognized or refused
                 showScreen('onboarding-screen');
             }
-        }, 1500);
+        }, 800);
     }
 }
 // 🔥 Логика кнопок Онбординга (регистрации)

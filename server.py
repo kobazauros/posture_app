@@ -26,10 +26,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
 
 @app.after_request
 def add_header(response):
-    """Disable caching for all responses during development."""
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
+    """Cache static assets (CSS/JS/images/WASM); disable caching for API and HTML."""
+    content_type = response.content_type or ''
+    if any(ct in content_type for ct in ['text/css', 'javascript', 'image/', 'font/', 'application/wasm']):
+        response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=86400'
+    else:
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
     return response
 
 logger = logging.getLogger(__name__)
@@ -154,7 +158,7 @@ def upload():
                         _, K = get_focal_length_from_exif("", w, h, fallback_35mm=26.0)
                         corrected_cv = correct_image_perspective(img_cv, pitch, roll, K)
                         
-                        success, buffer = cv2.imencode('.jpg', corrected_cv, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+                        success, buffer = cv2.imencode('.jpg', corrected_cv, [cv2.IMWRITE_JPEG_QUALITY, 90])
                         if success:
                             img_data = buffer.tobytes()
                             images[i] = "data:image/jpeg;base64," + base64.b64encode(img_data).decode('utf-8')

@@ -113,8 +113,46 @@ export async function initializeAuthSession() {
         return { session_id: state.sessionId, is_registered: state.isRegistered, role: state.role, first_name: state.firstName };
     }
 
-    // Proceed to attempt restore/claim for this client.
+    // Prioritize token claim if a token is present in the state
+    if (state.token) {
+        try {
+            const response = await fetch('session/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: state.token, client_id: state.clientId }),
+            });
 
+            const payload = await response.json().catch(() => ({}));
+            if (response.ok && payload.session_id) {
+                state.sessionId = payload.session_id;
+                try {
+                    sessionStorage.setItem(SESSION_STORAGE_KEY, state.sessionId);
+                    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+                    setCookie(CLIENT_STORAGE_KEY, state.clientId, 60 * 60 * 24 * 365);
+                } catch (err) {
+                    console.warn('[auth] unable to persist session id', err);
+                }
+
+                state.token = null;
+                url.searchParams.delete('t');
+                window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+                setAuthState(true, 'НАЧАТЬ');
+                
+                // Save state
+                state.isRegistered = payload.is_registered;
+                state.role = payload.role;
+                state.firstName = payload.first_name;
+                
+                return payload;
+            } else {
+                console.warn('[auth] session claim failed', payload);
+            }
+        } catch (err) {
+            console.warn('[auth] session claim request failed', err);
+        }
+    }
+
+    // Proceed to attempt restore for this client if no token or claim failed.
     try {
         const restoredResponse = await fetch('session/restore', {
             method: 'POST',
@@ -143,45 +181,5 @@ export async function initializeAuthSession() {
         console.warn('[auth] session restore request failed', err);
     }
 
-    if (!state.token) {
-        return false;
-    }
-
-    try {
-        const response = await fetch('session/claim', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: state.token, client_id: state.clientId }),
-        });
-
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.session_id) {
-            console.warn('[auth] session claim failed', payload);
-            return false;
-        }
-
-        state.sessionId = payload.session_id;
-        try {
-            sessionStorage.setItem(SESSION_STORAGE_KEY, state.sessionId);
-            sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-            setCookie(CLIENT_STORAGE_KEY, state.clientId, 60 * 60 * 24 * 365);
-        } catch (err) {
-            console.warn('[auth] unable to persist session id', err);
-        }
-
-        state.token = null;
-        url.searchParams.delete('t');
-        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-        setAuthState(true, 'НАЧАТЬ');
-        
-        // Save state
-        state.isRegistered = payload.is_registered;
-        state.role = payload.role;
-        state.firstName = payload.first_name;
-        
-        return payload;
-    } catch (err) {
-        console.warn('[auth] session claim request failed', err);
-        return false;
-    }
+    return false;
 }

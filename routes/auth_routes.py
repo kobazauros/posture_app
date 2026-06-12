@@ -27,6 +27,10 @@ def claim_session():
         if isinstance(entry, dict) and entry.get('claimed') and entry.get('session_id'):
             if client_id and entry.get('client_id') != client_id:
                 entry['client_id'] = client_id
+                for other_id, other_entry in list(registry.items()):
+                    if other_id != user_id_decoded and isinstance(other_entry, dict) and other_entry.get("client_id") == client_id:
+                        other_entry["client_id"] = None
+                        registry[other_id] = other_entry
                 registry[user_id_decoded] = entry
                 try:
                     save_session_registry(registry)

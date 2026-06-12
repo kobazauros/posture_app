@@ -772,7 +772,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+    transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
 }
 
 /* Центрирование контента */

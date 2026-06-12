@@ -3,8 +3,11 @@ venvPath = "."
 venv = ".venv"
 project-excludes = [
     "**/_pyrefly_virtual_/**",
-    "**/inmemory/**"
+    "**/inmemory/**",
+    "**/agents/**",
+    "**/.antigravity/**",
+    "**/agent_chat/**"
 ]
 project-includes = [
-    "**/*.py"
+    "posture_app/**/*.py"
 ]
