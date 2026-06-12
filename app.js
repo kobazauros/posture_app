@@ -30,7 +30,7 @@ updateStepIndicator();
 
         if (!isCached) {
             if (progressBarContainer) progressBarContainer.style.display = 'block';
-            
+
             // Fake progress animation up to 90%
             setTimeout(() => {
                 if (progressBar) progressBar.style.width = '90%';
@@ -64,7 +64,7 @@ updateStepIndicator();
                     routeUser();
                 }, 600);
             }, 800);
-            
+
             // Распаковываем ИИ в фоне (из кэша достанет мгновенно, но WASM нужно развернуть)
             // Даем небольшую паузу (1 сек), чтобы UI формы успел отрисоваться без лагов
             setTimeout(() => {
@@ -79,7 +79,7 @@ updateStepIndicator();
 // --- ЛОГИКА РОУТИНГА С БАЗОЙ ДАННЫХ ---
 async function routeUser() {
     const authData = await initializeAuthSession();
-    
+
     const showScreen = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
         const el = document.getElementById(id);
@@ -93,9 +93,9 @@ async function routeUser() {
         if (greetingText && authData.first_name) {
             greetingText.textContent = `Здравствуйте, ${authData.first_name}!`;
         }
-        
+
         showScreen('greeting-screen');
-        
+
         setTimeout(() => {
             if (['client', 'admin'].includes(authData.role)) {
                 showScreen('form-screen');
@@ -122,7 +122,7 @@ async function handleRoleSelection(role) {
     errorLast.textContent = '';
     const firstName = firstNameInput.value.trim();
     const lastName = lastNameInput.value.trim();
-    
+
     // Валидация
     if (!firstName) {
         errorFirst.textContent = 'Пожалуйста, введите Имя.';
@@ -132,11 +132,11 @@ async function handleRoleSelection(role) {
         errorLast.textContent = 'Пожалуйста, введите Фамилию.';
         return;
     }
-    
+
     // Disable button to prevent double-submit
     const btn = document.getElementById('submit-onboarding-btn');
     if (btn) btn.disabled = true;
-    
+
     try {
         const response = await fetch('/user/register', {
             method: 'POST',
@@ -148,17 +148,17 @@ async function handleRoleSelection(role) {
                 role: role // 'patient' or 'doctor' from UI
             })
         });
-        
+
         const result = await response.json();
         if (result.status === 'success') {
             // Update local state
             state.isRegistered = true;
             state.firstName = firstName;
             state.role = result.role; // Real DB role ('client' or 'specialist-pending')
-            
+
             // Скрываем онбординг
             document.getElementById('onboarding-screen').style.display = 'none';
-            
+
             if (['client', 'admin'].includes(state.role)) {
                 document.getElementById('form-screen').style.display = 'flex';
             } else {
