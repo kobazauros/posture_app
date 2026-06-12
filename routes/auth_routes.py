@@ -34,7 +34,10 @@ def claim_session():
                     pass
             
             # Check if user is in Postgres
+            logger.info(f"Looking up existing session user in DB by telegram_id: {user_id_decoded}")
             user = get_user_by_telegram_id(user_id_decoded)
+            logger.info(f"DB search result: {user}")
+            
             return jsonify({
                 'status': 'success', 
                 'user_id': user_id_decoded, 
@@ -49,7 +52,10 @@ def claim_session():
     if not user_id or not session_id:
         return jsonify({'status': 'error', 'message': 'Token already used or invalid. Request a new Telegram link.'}), 403
 
+    logger.info(f"Looking up new session user in DB by telegram_id: {user_id}")
     user = get_user_by_telegram_id(user_id)
+    logger.info(f"DB search result: {user}")
+    
     return jsonify({
         'status': 'success', 
         'user_id': user_id, 
@@ -72,7 +78,10 @@ def restore_existing_session():
     if not user_id or not session_id:
         return jsonify({'status': 'error', 'message': 'No existing session'}), 404
 
+    logger.info(f"Looking up restored session user in DB by telegram_id: {user_id}")
     user = get_user_by_telegram_id(user_id)
+    logger.info(f"DB search result: {user}")
+    
     return jsonify({
         'status': 'success', 
         'user_id': user_id, 
