@@ -1,5 +1,5 @@
-import { TELEGRAM_BOT_USERNAME, TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY, state } from './state.js?v=5';
-import { stopCamera } from './camera.js?v=5';
+import { TELEGRAM_BOT_USERNAME, TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY, state } from './state.js?v=6';
+import { stopCamera } from './camera.js?v=6';
 
 /**
  * Clears the auto-redirect timer and countdown state.
