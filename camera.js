@@ -1,6 +1,6 @@
-import { MAX_CAMERA_ZOOM, MIN_CAMERA_ZOOM, state } from './state.js?v=6';
-import { initSensors } from './sensors.js?v=6';
-import { initDetector, startDetectionLoop, stopDetectionLoop } from './detector.js?v=6';
+import { MAX_CAMERA_ZOOM, MIN_CAMERA_ZOOM, state } from './state.js?v=7';
+import { initSensors } from './sensors.js?v=7';
+import { initDetector, startDetectionLoop, stopDetectionLoop } from './detector.js?v=7';
 
 /**
  * Clamps a numeric value into the provided range.
