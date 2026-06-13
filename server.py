@@ -28,6 +28,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
 def add_header(response):
     """Cache static assets (CSS/JS/images/WASM); disable caching for API and HTML."""
     content_type = response.content_type or ''
+    if app.debug:
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+
     if any(ct in content_type for ct in ['text/html', 'text/css', 'javascript', 'image/', 'font/', 'application/wasm']):
         response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=86400'
     else:

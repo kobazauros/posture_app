@@ -143,17 +143,23 @@ async function handleRoleSelection(role) {
     const lastNameInput = document.getElementById('user-lastname');
     const errorFirst = document.getElementById('firstname-error');
     const errorLast = document.getElementById('lastname-error');
+
+    firstNameInput.classList.remove('invalid');
+    lastNameInput.classList.remove('invalid');
     errorFirst.textContent = '';
     errorLast.textContent = '';
+
     const firstName = firstNameInput.value.trim();
     const lastName = lastNameInput.value.trim();
 
     // Валидация
     if (!firstName) {
+        firstNameInput.classList.add('invalid');
         errorFirst.textContent = 'Пожалуйста, введите Имя.';
         return;
     }
     if (!lastName) {
+        lastNameInput.classList.add('invalid');
         errorLast.textContent = 'Пожалуйста, введите Фамилию.';
         return;
     }
@@ -208,6 +214,19 @@ document.getElementById('submit-onboarding-btn')?.addEventListener('click', () =
     // Узнаем, какой переключатель выбран (patient или doctor)
     const selectedRole = document.querySelector('input[name="role-selection"]:checked').value;
     handleRoleSelection(selectedRole);
+});
+
+// Очистка ошибок при вводе в онбординге
+['user-firstname', 'user-lastname'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('input', () => {
+            el.classList.remove('invalid');
+            const errId = id === 'user-firstname' ? 'firstname-error' : 'lastname-error';
+            const errEl = document.getElementById(errId);
+            if (errEl) errEl.textContent = '';
+        });
+    }
 });
 
 

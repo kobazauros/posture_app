@@ -291,8 +291,10 @@ export function blurFaceOnCanvas(ctx, video, landmarks, canvasW, canvasH, mappin
     const srcW = Math.min(videoW - srcX, fw / mapping.scale);
     const srcH = Math.min(videoH - srcY, fh / mapping.scale);
 
+    const blurRadius = Math.max(10, Math.round(Math.max(canvasW, canvasH) * 0.02));
+
     ctx.save();
-    ctx.filter = 'blur(25px)';
+    ctx.filter = `blur(${blurRadius}px)`;
 
     // Clip to an ellipse so the blur blends naturally.
     ctx.beginPath();

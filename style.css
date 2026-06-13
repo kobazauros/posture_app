@@ -1,12 +1,17 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: #000;
+    background-color: #000;
     color: #fff;
     font-family: -apple-system, sans-serif;
     height: 100vh;
     box-sizing: border-box;
 }
+
+h2 {
+    color: #fff;
+}
+
 
 *,
 *:before,
@@ -42,11 +47,22 @@ body {
     margin-bottom: 25px;
 }
 
+.form-subtitle {
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    margin: 0 0 34px 0;
+}
+
+.form-subtitle.first-subtitle {
+    margin-top: 9px;
+}
+
 .input-group input,
 .input-group select {
     width: 100%;
     padding: 15px;
-    background: #1c1c1e;
+    background-color: #1c1c1e;
     border: 1px solid #333;
     border-radius: 12px;
     color: #fff;
@@ -78,6 +94,82 @@ body {
     font-weight: bold;
     font-size: 17px;
 }
+
+/* Light theme overrides */
+@media (prefers-color-scheme: light) {
+
+    h2,
+    .helper-switch-text strong,
+    .form-subtitle {
+        color: #000000 !important;
+    }
+
+    .helper-switch-text span {
+        color: #8E8E93 !important;
+    }
+
+    body,
+    .screen,
+    #sending-screen,
+    #error-screen {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+    }
+
+    .sending-card {
+        background: #F2F2F7 !important;
+        color: #000000 !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .error-card {
+        background: #F2F2F7 !important;
+        color: #000000 !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .error-desc {
+        color: #333333 !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        margin-bottom: 30px !important;
+        font-size: 16px !important;
+        padding: 0 20px !important;
+    }
+
+    .input-group input,
+    .input-group select {
+        background-color: #F2F2F7 !important;
+        color: #000000 !important;
+        border-color: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .gender-toggle,
+    .helper-switch {
+        background-color: #F2F2F7 !important;
+        border-color: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .input-group input.invalid {
+        border-color: #ff453a;
+        background: #24181a;
+    }
+
+    .helper-switch .slider {
+        background-color: #E9E9EB !important;
+    }
+
+    .helper-switch .slider:before {
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .helper-switch input:checked+.slider {
+        background-color: #34C759 !important;
+    }
+}
+
+
 
 /* КАМЕРА */
 #camera-screen {
@@ -269,6 +361,7 @@ body {
     transform: translateX(-50%);
     font-size: 14px;
     background: rgba(0, 0, 0, 0.4);
+    color: #fff;
     padding: 5px 15px;
     border-radius: 20px;
     z-index: 30;
@@ -466,7 +559,7 @@ body {
 /* ПЕРЕКЛЮЧАТЕЛЬ ПОЛА */
 .gender-toggle {
     display: flex;
-    background: #1c1c1e;
+    background-color: #1c1c1e;
     border: 1px solid #333;
     border-radius: 12px;
     overflow: hidden;
@@ -504,7 +597,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #1c1c1e;
+    background-color: #1c1c1e;
     padding: 15px;
     border-radius: 12px;
     border: 1px solid #333;
@@ -757,6 +850,15 @@ body {
     width: 100%;
     text-align: left;
     color: rgba(255, 255, 255, 0.9);
+}
+
+.error-desc {
+    color: #ccc;
+    font-weight: 500 !important;
+    text-align: center !important;
+    margin-bottom: 30px !important;
+    font-size: 16px !important;
+    padding: 0 20px !important;
 }
 
 /* ПОЛНОЭКРАННЫЙ ЧЕРНЫЙ СПЛЭШ  */

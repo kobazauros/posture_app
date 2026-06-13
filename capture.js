@@ -1,5 +1,6 @@
 import { state, stepLabels } from './state.js?v=11';
 import { sendPhotosToServer } from './upload.js?v=11';
+import { getFigureStatus } from './detector.js?v=11';
 
 /**
  * Updates the visible step label for the capture flow.
@@ -57,14 +58,64 @@ function captureFrameToPreview() {
         ctx.scale(-1, 1);
     }
 
+    let cropX = 0, cropY = 0, cropWidth = video.videoWidth, cropHeight = video.videoHeight;
     if (useDigitalZoom) {
-        const cropWidth = video.videoWidth / state.cameraZoom;
-        const cropHeight = video.videoHeight / state.cameraZoom;
-        const cropX = (video.videoWidth - cropWidth) / 2;
-        const cropY = (video.videoHeight - cropHeight) / 2;
+        cropWidth = video.videoWidth / state.cameraZoom;
+        cropHeight = video.videoHeight / state.cameraZoom;
+        cropX = (video.videoWidth - cropWidth) / 2;
+        cropY = (video.videoHeight - cropHeight) / 2;
+    }
+
+    if (useDigitalZoom) {
         ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
     } else {
         ctx.drawImage(video, 0, 0);
+    }
+
+    // Save UNBLURRED frame to state for backend MediaPipe
+    state.pendingUnblurredPhoto = canvas.toDataURL('image/jpeg', 0.8);
+
+    // --- ПРИМЕНЯЕМ РАЗМЫТИЕ ЛИЦА ТОЛЬКО ДЛЯ ПРЕВЬЮ ---
+    const status = getFigureStatus();
+    if (status.keypoints && status.keypoints.length >= 11) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const zoomScale = useDigitalZoom ? state.cameraZoom : 1.0;
+
+        for (let i = 0; i <= 10; i++) {
+            const lm = status.keypoints[i];
+            if (lm && (lm.visibility === undefined || lm.visibility > 0.3)) {
+                let x = (lm.x * video.videoWidth - cropX) * zoomScale;
+                let y = (lm.y * video.videoHeight - cropY) * zoomScale;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        }
+
+        if (minX !== Infinity) {
+            const padX = (maxX - minX) * 0.6;
+            const padY = (maxY - minY) * 0.7;
+            const fx = Math.max(0, minX - padX);
+            const fy = Math.max(0, minY - padY);
+            const fw = Math.min(canvas.width - fx, (maxX - minX) + padX * 2);
+            const fh = Math.min(canvas.height - fy, (maxY - minY) + padY * 2);
+
+            if (fw > 0 && fh > 0) {
+                const blurRadius = Math.max(10, Math.round(Math.max(canvas.width, canvas.height) * 0.02));
+                ctx.save();
+                ctx.filter = `blur(${blurRadius}px)`;
+                ctx.beginPath();
+                ctx.ellipse(fx + fw / 2, fy + fh / 2, fw / 2, fh / 2, 0, 0, Math.PI * 2);
+                ctx.clip();
+                if (useDigitalZoom) {
+                    ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+                } else {
+                    ctx.drawImage(video, 0, 0);
+                }
+                ctx.restore();
+            }
+        }
     }
 
     if (navigator.vibrate) navigator.vibrate(50);
@@ -106,8 +157,8 @@ export function bindCaptureHandlers() {
     if (nextStepBtn) {
         nextStepBtn.onclick = () => {
             const previewImage = document.getElementById('preview-image');
-            if (previewImage) {
-                state.finalPhotos.push(previewImage.src);
+            if (previewImage && state.pendingUnblurredPhoto) {
+                state.finalPhotos.push(state.pendingUnblurredPhoto);
                 state.finalOrientations.push({ pitch: state.pendingPitchDeg, roll: state.pendingRollDeg });
             }
 
