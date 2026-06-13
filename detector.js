@@ -6,7 +6,7 @@
  * The detection loop handles: face blur overlay, figure bounds checking,
  * guide-line flashing, and capture button coordination.
  */
-import { state } from './state.js?v=8';
+import { state } from './state.js?v=11';
 
 // ---------------------------------------------------------------------------
 // Constants

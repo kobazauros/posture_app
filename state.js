@@ -7,11 +7,17 @@ export const CLIENT_STORAGE_KEY = 'posture_app_client_id';
 
 export const url = new URL(window.location.href);
 
+let initialToken = url.searchParams.get('t');
+if (!initialToken && window.location.hash) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    initialToken = hashParams.get('t');
+}
+
 /**
  * Mutable runtime state shared by the app modules.
  */
 export const state = {
-    token: url.searchParams.get('t'),
+    token: initialToken,
     sessionId: null,
     clientId: null,
     isRegistered: false,

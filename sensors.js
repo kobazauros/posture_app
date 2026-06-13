@@ -1,4 +1,4 @@
-import { SENSOR_SMOOTHING, state } from './state.js?v=8';
+import { SENSOR_SMOOTHING, state } from './state.js?v=11';
 
 let sensorsBound = false;
 let animationFrameId = null;

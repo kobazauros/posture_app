@@ -4,7 +4,7 @@ import {
     TOKEN_STORAGE_KEY,
     state,
     url,
-} from './state.js?v=8';
+} from './state.js?v=11';
 
 /**
  * Reads a cookie value by name.
@@ -74,6 +74,11 @@ export function bootstrapAuthFromUrl() {
         }
 
         url.searchParams.delete('t');
+        if (window.location.hash) {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            hashParams.delete('t');
+            url.hash = hashParams.toString() ? '#' + hashParams.toString() : '';
+        }
         window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
         return;
     }
@@ -140,6 +145,11 @@ export async function initializeAuthSession() {
 
                 state.token = null;
                 url.searchParams.delete('t');
+                if (window.location.hash) {
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    hashParams.delete('t');
+                    url.hash = hashParams.toString() ? '#' + hashParams.toString() : '';
+                }
                 window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
                 setAuthState(true, 'НАЧАТЬ');
 

@@ -2,29 +2,35 @@
 <html lang="ru" style="background-color: #000;">
 
 <head>
+    <meta name="theme-color" content="#000000">
+    <meta name="color-scheme" content="dark">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <meta name="color-scheme" content="dark">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Posture Pro - Web</title>
     <style>
         /* Critical inline CSS — splash appears instantly, no white flash */
-        html,
+        html {
+            background-color: #000 !important;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+            /* Отключает bounce-эффект во всех современных WebView */
+        }
+
         body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
             background-color: #000 !important;
-        }
-
-        body {
-            margin: 0;
-            background: #000;
-            overflow: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            /* Плавный скролл на iOS */
+            overscroll-behavior: none;
             color: #fff;
         }
 
@@ -109,7 +115,9 @@
             transition: width 10s cubic-bezier(0.1, 0.7, 0.1, 1);
         }
     </style>
-    <!-- Загружаем основные стили асинхронно, чтобы не блокировать отрисовку черного фона -->
+    <!-- CSS загружается асинхронно — весь splash уже описан в inline <style> выше.
+         Браузер рисует чёрный splash сразу (~56ms = TTFB+download), не ждёт style.css.
+         (Async раньше давал FP=344ms только из-за анимации splashFadeIn from:#fff — она удалена) -->
     <link rel="preload" href="style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
         <link rel="stylesheet" href="style.css">
@@ -271,8 +279,152 @@
     </div>
 
     <canvas id="capture-canvas" style="display:none;"></canvas>
+    <canvas id="capture-canvas" style="display:none;"></canvas>
 
-    <script type="module" src="app.js?v=8"></script>
+    <!-- === ОТЛАДКА ЗАГРУЗКИ: видимая панель таймингов === -->
+    <div id="debug-timings" style="
+        position:fixed; top:0; left:0; right:0; z-index:99999;
+        background:rgba(0,0,0,0.85); color:#0f0; font:11px/1.4 monospace;
+        padding:6px 10px; pointer-events:none; white-space:pre;
+    ">⏱ Loading...</div>
+    <script>
+        (function () {
+            var el = document.getElementById('debug-timings');
+            function showTimings() {
+                var perf = performance.getEntriesByType('navigation')[0];
+                if (!perf) { el.textContent = '⏱ No perf data'; return; }
+                var ver = new URLSearchParams(window.location.search).get('v') || 'none';
+                var lines = [
+                    'Ver:    ' + ver,
+                    'DNS:    ' + (perf.domainLookupEnd - perf.domainLookupStart).toFixed(0) + 'ms',
+                    'TCP:    ' + (perf.connectEnd - perf.connectStart).toFixed(0) + 'ms',
+                    'TLS:    ' + (perf.secureConnectionStart > 0 ? (perf.connectEnd - perf.secureConnectionStart).toFixed(0) + 'ms' : 'n/a'),
+                    'TTFB:   ' + (perf.responseStart - perf.requestStart).toFixed(0) + 'ms',
+                    'Download:' + (perf.responseEnd - perf.responseStart).toFixed(0) + 'ms',
+                    'DOM:    ' + (perf.domInteractive - perf.responseEnd).toFixed(0) + 'ms',
+                    'DOMLoad:' + (perf.domContentLoadedEventEnd - perf.startTime).toFixed(0) + 'ms',
+                    'Total:  ' + (perf.loadEventEnd > 0 ? (perf.loadEventEnd - perf.startTime).toFixed(0) + 'ms' : '...')
+                ];
+                var cssEntries = performance.getEntriesByType('resource').filter(function (r) { return r.name.indexOf('style.css') !== -1; });
+                if (cssEntries.length > 0) {
+                    var css = cssEntries[0];
+                    lines.push('CSS:    ' + (css.responseEnd - css.startTime).toFixed(0) + 'ms (асинхронно)');
+                }
+                var paintEntries = performance.getEntriesByType('paint');
+                var fp = paintEntries.filter(function (p) { return p.name === 'first-paint'; })[0];
+                var fcp = paintEntries.filter(function (p) { return p.name === 'first-contentful-paint'; })[0];
+                if (fp) lines.push('FP:     ' + fp.startTime.toFixed(0) + 'ms (First Paint)');
+                if (fcp) lines.push('FCP:    ' + fcp.startTime.toFixed(0) + 'ms');
+
+                el.textContent = lines.join('\n');
+
+                try {
+                    fetch('debug/log', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event: 'page_load_timings',
+                            payload: {
+                                dns: +(perf.domainLookupEnd - perf.domainLookupStart).toFixed(0),
+                                tcp: +(perf.connectEnd - perf.connectStart).toFixed(0),
+                                ttfb: +(perf.responseStart - perf.requestStart).toFixed(0),
+                                download: +(perf.responseEnd - perf.responseStart).toFixed(0),
+                                dom_interactive: +(perf.domInteractive - perf.responseEnd).toFixed(0),
+                                dom_content_loaded: +(perf.domContentLoadedEventEnd - perf.startTime).toFixed(0),
+                                total: perf.loadEventEnd > 0 ? +(perf.loadEventEnd - perf.startTime).toFixed(0) : null,
+                                fp: fp ? +fp.startTime.toFixed(0) : null,
+                                fcp: fcp ? +fcp.startTime.toFixed(0) : null,
+                                css_block: cssEntries.length > 0 ? +(cssEntries[0].responseEnd - cssEntries[0].startTime).toFixed(0) : null,
+                                user_agent: navigator.userAgent
+                            }
+                        })
+                    }).catch(function () { });
+                } catch (e) { }
+            }
+            // === Ловим First Paint через PerformanceObserver (работает в реальном времени) ===
+            var fpTime = null, fcpTime = null;
+            var rafFP = null;
+
+            // rAF: первый кадр, который реально нарисован браузером
+            requestAnimationFrame(function (ts) {
+                rafFP = ts;
+                // Обновляем панель сразу при первом кадре
+                var el2 = document.getElementById('debug-timings');
+                if (el2) el2.textContent = '🎨 rAF FP: ' + ts.toFixed(0) + 'ms\n⏱ Loading...';
+            });
+
+            try {
+                new PerformanceObserver(function (list) {
+                    list.getEntries().forEach(function (e) {
+                        if (e.name === 'first-paint') fpTime = e.startTime;
+                        if (e.name === 'first-contentful-paint') fcpTime = e.startTime;
+                    });
+                }).observe({ type: 'paint', buffered: true });
+            } catch (e) { }
+
+            function showTimings() {
+                var el = document.getElementById('debug-timings');
+                if (!el) return;
+                var perf = performance.getEntriesByType('navigation')[0];
+                if (!perf) { el.textContent = '⏱ No perf data'; return; }
+                var ver = new URLSearchParams(window.location.search).get('v') || 'none';
+                var lines = [
+                    'Ver:    ' + ver,
+                    'DNS:    ' + (perf.domainLookupEnd - perf.domainLookupStart).toFixed(0) + 'ms',
+                    'TCP:    ' + (perf.connectEnd - perf.connectStart).toFixed(0) + 'ms',
+                    'TLS:    ' + (perf.secureConnectionStart > 0 ? (perf.connectEnd - perf.secureConnectionStart).toFixed(0) + 'ms' : 'n/a'),
+                    'TTFB:   ' + (perf.responseStart - perf.requestStart).toFixed(0) + 'ms',
+                    'Download:' + (perf.responseEnd - perf.responseStart).toFixed(0) + 'ms',
+                    'DOM:    ' + (perf.domInteractive - perf.responseEnd).toFixed(0) + 'ms',
+                    'DOMLoad:' + (perf.domContentLoadedEventEnd - perf.startTime).toFixed(0) + 'ms',
+                    'Total:  ' + (perf.loadEventEnd > 0 ? (perf.loadEventEnd - perf.startTime).toFixed(0) + 'ms' : '...')
+                ];
+                var cssEntries = performance.getEntriesByType('resource').filter(function (r) { return r.name.indexOf('style.css') !== -1; });
+                if (cssEntries.length > 0) {
+                    var css = cssEntries[0];
+                    lines.push('CSS:    ' + (css.responseEnd - css.startTime).toFixed(0) + 'ms (async)');
+                }
+                // Paint entries
+                var paintEntries = performance.getEntriesByType('paint');
+                var fp = fpTime || (paintEntries.filter(function (p) { return p.name === 'first-paint'; })[0] || {}).startTime || null;
+                var fcp = fcpTime || (paintEntries.filter(function (p) { return p.name === 'first-contentful-paint'; })[0] || {}).startTime || null;
+                if (fp) lines.push('FP:     ' + (+fp).toFixed(0) + 'ms');
+                if (fcp) lines.push('FCP:    ' + (+fcp).toFixed(0) + 'ms');
+                if (rafFP) lines.push('rAF FP: ' + rafFP.toFixed(0) + 'ms ← реальный первый кадр');
+                if (!fp && !fcp && !rafFP) lines.push('FP:     не поддерживается WebView');
+
+                el.textContent = lines.join('\n');
+
+                try {
+                    fetch('debug/log', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event: 'page_load_timings',
+                            payload: {
+                                ver: ver,
+                                ttfb: +(perf.responseStart - perf.requestStart).toFixed(0),
+                                dom_content_loaded: +(perf.domContentLoadedEventEnd - perf.startTime).toFixed(0),
+                                total: perf.loadEventEnd > 0 ? +(perf.loadEventEnd - perf.startTime).toFixed(0) : null,
+                                fp: fp ? +fp : null,
+                                fcp: fcp ? +fcp : null,
+                                raf_fp: rafFP ? +rafFP.toFixed(0) : null,
+                                css_ms: cssEntries.length > 0 ? +(cssEntries[0].responseEnd - cssEntries[0].startTime).toFixed(0) : null,
+                                ua: navigator.userAgent.slice(0, 120)
+                            }
+                        })
+                    }).catch(function () { });
+                } catch (e) { }
+            }
+            if (document.readyState === 'complete') {
+                setTimeout(showTimings, 100);
+            } else {
+                window.addEventListener('load', function () { setTimeout(showTimings, 100); });
+            }
+        })();
+    </script>
+
+    <script type="module" src="app.js?v=11"></script>
 </body>
 
 </html>

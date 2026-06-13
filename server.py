@@ -50,7 +50,12 @@ os.makedirs(RESULTS_FOLDER, exist_ok=True)
 @app.route('/')
 def index():
     """Serve the main client application."""
-    return send_from_directory('.', 'index.html')
+    import time
+    start = time.time()
+    res = send_from_directory('.', 'index.html')
+    elapsed = time.time() - start
+    logger.info(f"Served index.html in {elapsed*1000:.2f}ms")
+    return res
 
 # Регистрируем роуты авторизации и работы с БД
 app.register_blueprint(auth_bp)
