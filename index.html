@@ -185,11 +185,11 @@
                 style="width: 100%; padding: 18px; background: #34C759; color: #fff; border: none; border-radius: 14px; font-weight: bold; font-size: 17px; margin-top: 20px;">ПРОДОЛЖИТЬ</button>
         </div>
     </div>
-    <!-- Экран ожидания верификации (для врачей) -->
-    <div id="pending-verification-screen" class="screen" style="display:none;">
+    <!-- Экран статуса верификации специалиста -->
+    <div id="verification-screen" class="screen" style="display:none;">
         <div class="form-container" style="text-align: center;">
-            <h2>Запрос отправлен ⏳</h2>
-            <p style="color: var(--text-gray); margin-top: 15px; line-height: 2.0;">
+            <h2 id="verification-title">Запрос отправлен ⏳</h2>
+            <p id="verification-text" style="color: var(--text-gray); margin-top: 15px; line-height: 2.0;">
                 Ваша заявка на получение статуса Специалиста отправлена администратору.
                 Мы пришлем вам уведомление в Telegram, как только доступ будет открыт.
             </p>

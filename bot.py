@@ -125,6 +125,43 @@ def show_help(message):
     )
     bot.send_message(message.chat.id, help_text, parse_mode="HTML")
 
+from database import update_user_role, get_user_by_telegram_id
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('approve_spec_') or call.data.startswith('reject_spec_'))
+def handle_specialist_approval(call):
+    action, user_id_str = call.data.rsplit('_', 1)
+    user_id = int(user_id_str)
+    
+    # Get user to fetch first name
+    user = get_user_by_telegram_id(user_id)
+    first_name = user.get('first_name', '') if user else 'Специалист'
+    last_name = user.get('last_name', '') if user else ''
+    full_name = f"{first_name} {last_name}".strip()
+
+    if action == 'approve_spec':
+        update_user_role(user_id, 'specialist-approved')
+        try:
+            bot.send_message(user_id, f"Здравствуйте {first_name}, Ваша заявка одобрена, запустите анализ осанки повторно.")
+        except Exception as e:
+            logger.error(f"Failed to send approval message to {user_id}: {e}")
+            
+        bot.edit_message_text(f"✅ Заявка специалиста <b>{full_name}</b> одобрена.", 
+                              call.message.chat.id, 
+                              call.message.message_id,
+                              parse_mode="HTML")
+                              
+    elif action == 'reject_spec':
+        update_user_role(user_id, 'specialist-refused')
+        try:
+            bot.send_message(user_id, f"Здравствуйте {first_name}, Ваша заявка отклонена, свяжитесь с администратором.")
+        except Exception as e:
+            logger.error(f"Failed to send rejection message to {user_id}: {e}")
+            
+        bot.edit_message_text(f"❌ Заявка специалиста <b>{full_name}</b> отклонена.", 
+                              call.message.chat.id, 
+                              call.message.message_id,
+                              parse_mode="HTML")
+
 if __name__ == "__main__":
     # Выполняем сброс настроек Mini App при каждом запуске
     reset_mini_app_interface()

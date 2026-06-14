@@ -146,6 +146,33 @@ def register_user_endpoint():
         
     success = register_user(user_id, first_name, last_name, db_role)
     if success:
+        if db_role == 'specialist-pending':
+            from database import get_admins
+            import telebot
+            import os
+            from telebot import types
+            
+            token = os.getenv("TOKEN")
+            if token:
+                try:
+                    bot = telebot.TeleBot(token)
+                    admins = get_admins()
+                    for admin in admins:
+                        admin_id = admin.get('telegram_id')
+                        if admin_id:
+                            markup = types.InlineKeyboardMarkup()
+                            btn_approve = types.InlineKeyboardButton("✅ Одобрить", callback_data=f"approve_spec_{user_id}")
+                            btn_reject = types.InlineKeyboardButton("❌ Отказать", callback_data=f"reject_spec_{user_id}")
+                            markup.row(btn_approve, btn_reject)
+                            bot.send_message(
+                                admin_id,
+                                f"🆕 <b>Зарегистрирован новый специалист:</b>\n{first_name} {last_name}",
+                                reply_markup=markup,
+                                parse_mode="HTML"
+                            )
+                except Exception as e:
+                    logger.error(f"Failed to notify admins about new specialist: {e}")
+
         return jsonify({'status': 'success', 'message': 'User registered successfully', 'role': db_role})
     else:
         return jsonify({'status': 'error', 'message': 'Failed to register user'}), 500

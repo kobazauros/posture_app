@@ -81,3 +81,49 @@ def register_user(telegram_id, first_name, last_name, role):
         return False
     finally:
         conn.close()
+
+def get_admins():
+    """
+    Fetch all users with role 'admin'.
+    Returns a list of dictionaries with admin data.
+    """
+    conn = get_db_connection()
+    if not conn:
+        return []
+        
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, telegram_id, role, first_name, last_name FROM users WHERE role = 'admin'")
+            admins = cur.fetchall()
+            return [dict(admin) for admin in admins]
+    except Exception as e:
+        logger.error(f"Error fetching admins: {e}")
+        return []
+    finally:
+        conn.close()
+
+def update_user_role(telegram_id, role):
+    """
+    Updates the role of a user by their telegram_id.
+    """
+    if not telegram_id:
+        return False
+        
+    conn = get_db_connection()
+    if not conn:
+        return False
+        
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET role = %s WHERE telegram_id = %s",
+                (role, telegram_id)
+            )
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error(f"Error updating user role for {telegram_id}: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()

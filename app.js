@@ -124,14 +124,26 @@ async function routeUser() {
         setTimeout(() => {
             if (['client', 'admin'].includes(authData.role)) {
                 showScreen('form-screen');
-            } else if (['specialist-pending', 'specialist-approved'].includes(authData.role)) {
-                showScreen('pending-verification-screen');
+            } else if (['specialist-pending', 'specialist-approved', 'specialist-refused'].includes(authData.role)) {
+                const vTitle = document.getElementById('verification-title');
+                const vText = document.getElementById('verification-text');
+
                 if (authData.role === 'specialist-pending') {
-                    // Start redirect timer for specialists
+                    if (vTitle) vTitle.innerHTML = 'Запрос отправлен ⏳';
+                    if (vText) vText.innerHTML = 'Ваша заявка на получение статуса Специалиста отправлена администратору. Мы пришлем вам уведомление в Telegram, как только доступ будет открыт.';
+                    showScreen('verification-screen');
                     setTimeout(() => closeOrRedirect(), 8000);
+                } else if (authData.role === 'specialist-approved') {
+                    if (vTitle) vTitle.innerHTML = 'Доступ открыт ✅';
+                    if (vText) vText.innerHTML = 'Вы успешно авторизованы как специалист. Приложение используется клиентами для отправки фото, ожидайте результаты пациентов прямо в боте Telegram.';
+                    showScreen('verification-screen');
+                } else if (authData.role === 'specialist-refused') {
+                    if (vTitle) vTitle.innerHTML = 'Заявка отклонена ❌';
+                    if (vText) vText.innerHTML = 'К сожалению, ваша заявка на статус специалиста была отклонена администратором. Свяжитесь с поддержкой, если считаете это ошибкой.';
+                    showScreen('verification-screen');
                 }
             } else {
-                // Default fallback if role is unrecognized or refused
+                // Default fallback if role is unrecognized
                 showScreen('onboarding-screen');
             }
         }, 800);
@@ -193,7 +205,14 @@ async function handleRoleSelection(role) {
             if (['client', 'admin'].includes(state.role)) {
                 document.getElementById('form-screen').style.display = 'flex';
             } else {
-                document.getElementById('pending-verification-screen').style.display = 'flex';
+                const vScreen = document.getElementById('verification-screen');
+                if (vScreen) {
+                    const vTitle = document.getElementById('verification-title');
+                    const vText = document.getElementById('verification-text');
+                    if (vTitle) vTitle.innerHTML = 'Запрос отправлен ⏳';
+                    if (vText) vText.innerHTML = 'Ваша заявка на получение статуса Специалиста отправлена администратору. Мы пришлем вам уведомление в Telegram, как только доступ будет открыт.';
+                    vScreen.style.display = 'flex';
+                }
                 // Вызываем ту же логику (closeOrRedirect), что и при успешной отправке фото
                 setTimeout(() => {
                     closeOrRedirect();
