@@ -157,6 +157,7 @@ export async function initializeAuthSession() {
                 state.isRegistered = payload.is_registered;
                 state.role = payload.role;
                 state.firstName = payload.first_name;
+                state.latestAnalysis = payload.latest_analysis;
 
                 return payload;
             } else {
@@ -201,6 +202,7 @@ export async function initializeAuthSession() {
             state.isRegistered = restoredPayload.is_registered;
             state.role = restoredPayload.role;
             state.firstName = restoredPayload.first_name;
+            state.latestAnalysis = restoredPayload.latest_analysis;
 
             return restoredPayload;
         }

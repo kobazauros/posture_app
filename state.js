@@ -55,6 +55,8 @@ export const state = {
     // New pose validation fields
     poseValid: true,
     poseErrorMessage: '',
+    latestAnalysis: null,
+    analysisId: null,
 };
 
 /**

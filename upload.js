@@ -182,6 +182,7 @@ export function sendPhotosToServer() {
             client_id: state.clientId,
             token: sessionStorage.getItem(TOKEN_STORAGE_KEY) || state.token,
             user_id: state.userId,
+            analysis_id: state.analysisId,
             user_data: {
                 age: document.getElementById('user-age').value,
                 weight: document.getElementById('user-weight').value,
@@ -239,7 +240,7 @@ export function sendPhotosToServer() {
                     const blob = new Blob([body], { type: 'application/json' });
                     navigator.sendBeacon('debug/log', blob);
                 } else {
-                    fetch('debug/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() => {});
+                    fetch('debug/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() => { });
                 }
             } catch (err) {
                 // ignore

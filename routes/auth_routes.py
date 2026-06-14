@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import logging
 from security import decode_token, claim_token, restore_session, load_session_registry, save_session_registry, close_session_by_session_id, close_session_by_client_id
-from database import get_user_by_telegram_id, register_user
+from database import get_user_by_telegram_id, register_user, get_latest_posture_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ def claim_session():
             logger.info(f"Looking up existing session user in DB by telegram_id: {user_id_decoded}")
             user = get_user_by_telegram_id(user_id_decoded)
             logger.info(f"DB search result: {user}")
+            latest_analysis = get_latest_posture_analysis(user_id_decoded)
             
             return jsonify({
                 'status': 'success', 
@@ -48,7 +49,8 @@ def claim_session():
                 'session_id': entry.get('session_id'),
                 'is_registered': user is not None,
                 'first_name': user.get('first_name') if user else None,
-                'role': user.get('role') if user else None
+                'role': user.get('role') if user else None,
+                'latest_analysis': latest_analysis
             })
 
     # Not claimed yet: attempt to claim normally.
@@ -59,6 +61,7 @@ def claim_session():
     logger.info(f"Looking up new session user in DB by telegram_id: {user_id}")
     user = get_user_by_telegram_id(user_id)
     logger.info(f"DB search result: {user}")
+    latest_analysis = get_latest_posture_analysis(user_id)
     
     return jsonify({
         'status': 'success', 
@@ -66,7 +69,8 @@ def claim_session():
         'session_id': session_id,
         'is_registered': user is not None,
         'first_name': user.get('first_name') if user else None,
-        'role': user.get('role') if user else None
+        'role': user.get('role') if user else None,
+        'latest_analysis': latest_analysis
     })
 
 
@@ -85,6 +89,7 @@ def restore_existing_session():
     logger.info(f"Looking up restored session user in DB by telegram_id: {user_id}")
     user = get_user_by_telegram_id(user_id)
     logger.info(f"DB search result: {user}")
+    latest_analysis = get_latest_posture_analysis(user_id)
     
     return jsonify({
         'status': 'success', 
@@ -92,7 +97,8 @@ def restore_existing_session():
         'session_id': session_id,
         'is_registered': user is not None,
         'first_name': user.get('first_name') if user else None,
-        'role': user.get('role') if user else None
+        'role': user.get('role') if user else None,
+        'latest_analysis': latest_analysis
     })
 
 

@@ -122,9 +122,27 @@ async function routeUser() {
         showScreen('greeting-screen');
 
         setTimeout(() => {
-            if (['client', 'admin'].includes(authData.role)) {
+            if (['client', 'admin', 'specialist-approved'].includes(authData.role)) {
+                if (authData.role === 'client' && state.latestAnalysis) {
+                    const latest = state.latestAnalysis;
+                    if (latest.age) document.getElementById('user-age').value = latest.age;
+                    if (latest.weight) document.getElementById('user-weight').value = latest.weight;
+                    if (latest.height) document.getElementById('user-height').value = latest.height;
+                    if (latest.gender === 'male' || latest.gender === 'female') {
+                        const r = document.getElementById('gender-' + latest.gender);
+                        if (r) r.checked = true;
+                    }
+                }
+
+                if (authData.role === 'specialist-approved') {
+                    const helperSwitch = document.querySelector('.helper-switch');
+                    if (helperSwitch) helperSwitch.style.display = 'none';
+                    const hasHelper = document.getElementById('has-helper');
+                    if (hasHelper) hasHelper.checked = true; // force 4 photos
+                }
+
                 showScreen('form-screen');
-            } else if (['specialist-pending', 'specialist-approved', 'specialist-refused'].includes(authData.role)) {
+            } else if (['specialist-pending', 'specialist-refused'].includes(authData.role)) {
                 const vTitle = document.getElementById('verification-title');
                 const vText = document.getElementById('verification-text');
 
@@ -133,10 +151,6 @@ async function routeUser() {
                     if (vText) vText.innerHTML = 'Ваша заявка на получение статуса Специалиста отправлена администратору. Мы пришлем вам уведомление в Telegram, как только доступ будет открыт.';
                     showScreen('verification-screen');
                     setTimeout(() => closeOrRedirect(), 8000);
-                } else if (authData.role === 'specialist-approved') {
-                    if (vTitle) vTitle.innerHTML = 'Доступ открыт ✅';
-                    if (vText) vText.innerHTML = 'Вы успешно авторизованы как специалист. Приложение используется клиентами для отправки фото, ожидайте результаты пациентов прямо в боте Telegram.';
-                    showScreen('verification-screen');
                 } else if (authData.role === 'specialist-refused') {
                     if (vTitle) vTitle.innerHTML = 'Заявка отклонена ❌';
                     if (vText) vText.innerHTML = 'К сожалению, ваша заявка на статус специалиста была отклонена администратором. Свяжитесь с поддержкой, если считаете это ошибкой.';
@@ -270,6 +284,42 @@ async function handleToCameraClick() {
 
     if (!validateForm()) {
         return;
+    }
+
+    const genderInput = document.querySelector('input[name="gender"]:checked');
+    const selectedGender = genderInput ? genderInput.value : 'male';
+    const age = document.getElementById('user-age').value;
+    const weight = document.getElementById('user-weight').value;
+    const height = document.getElementById('user-height').value;
+
+    const toCameraBtn = document.getElementById('to-camera-btn');
+    if (toCameraBtn) {
+        toCameraBtn.textContent = 'СОХРАНЕНИЕ...';
+        toCameraBtn.disabled = true;
+    }
+
+    try {
+        const draftRes = await fetch('form/save_draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: state.sessionId,
+                client_id: state.clientId,
+                token: sessionStorage.getItem('posture_app_token') || state.token,
+                user_data: { age, weight, height, gender: selectedGender }
+            })
+        });
+        const draftData = await draftRes.json();
+        if (draftData.status === 'success' && draftData.analysis_id) {
+            state.analysisId = draftData.analysis_id;
+        }
+    } catch (err) {
+        console.warn('[app] save_draft failed', err);
+    }
+
+    if (toCameraBtn) {
+        toCameraBtn.textContent = 'НАЧАТЬ';
+        toCameraBtn.disabled = false;
     }
 
     const hasHelper = document.getElementById('has-helper');

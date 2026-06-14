@@ -16,6 +16,7 @@ except Exception:
 
 from service import generate_pdf_from_analysis, deliver_pdf_to_telegram
 from security import decode_token, claim_token, restore_session, validate_session
+from database import save_draft_analysis, update_posture_analysis_photos, update_posture_analysis_result
 from routes.auth_routes import auth_bp
 from dotenv import load_dotenv
 
@@ -94,6 +95,35 @@ def debug_log():
         logger.warning('Failed to write debug log: %s', e)
     return jsonify({'status': 'ok'})
 
+@app.route('/form/save_draft', methods=['POST'])
+def save_draft():
+    """Save form data as a draft before uploading photos."""
+    data = request.json or {}
+    session_id = data.get('session_id')
+    client_id = data.get('client_id')
+    token = data.get('token')
+    
+    uid = validate_session(session_id)
+    if not uid and client_id:
+        uid, session_id = restore_session(client_id)
+    if not uid and token:
+        uid, session_id = claim_token(token, client_id=client_id)
+    
+    if not uid:
+        return jsonify({'status': 'error', 'message': 'Session expired or missing.'}), 403
+        
+    user_data = data.get('user_data', {})
+    age = user_data.get('age')
+    weight = user_data.get('weight')
+    height = user_data.get('height')
+    gender = user_data.get('gender')
+    
+    analysis_id = save_draft_analysis(uid, age, weight, height, gender)
+    if analysis_id is not None:
+        return jsonify({'status': 'success', 'analysis_id': analysis_id})
+    else:
+        return jsonify({'status': 'error', 'message': 'Failed to save draft'}), 500
+
 # ПРИЕМНИК: АНКЕТА + ФОТО
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -117,6 +147,7 @@ def upload():
     info = data.get('user_data', {})
     images = data.get('images', [])
     orientations = data.get('orientations', [])
+    analysis_id = data.get('analysis_id')
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Accept either 3 images (solo) or 4 images (with helper / back view)
@@ -219,6 +250,9 @@ def upload():
             'message': f'Failed to save all images. Saved: {len(saved_photos)} of expected 3 or 4.'
         }), 500
 
+    if analysis_id:
+        update_posture_analysis_photos(analysis_id, len(saved_photos), saved_photos, ts)
+
     # 3. Анализируем осанку через Gemini и сохраняем результат
     analysis_result = None
     analysis_error = None
@@ -235,6 +269,9 @@ def upload():
         # Параллельная копия в results для последующей интеграции доставки
         with open(os.path.join(RESULTS_FOLDER, analysis_filename), 'w', encoding='utf-8') as f:
             json.dump(analysis_result, f, ensure_ascii=False, indent=2)
+            
+        if analysis_id:
+            update_posture_analysis_result(analysis_id, analysis_result, 'analyzed')
         
         # Generate PDF report from the analysis results
         try:
@@ -271,6 +308,9 @@ def upload():
             json.dump(error_payload, f, ensure_ascii=False, indent=2)
         with open(os.path.join(RESULTS_FOLDER, error_filename), 'w', encoding='utf-8') as f:
             json.dump(error_payload, f, ensure_ascii=False, indent=2)
+            
+        if analysis_id:
+            update_posture_analysis_result(analysis_id, {'error': analysis_error}, 'error')
             
     logger.info('Upload processed for user_id=%s, saved_photos=%s, analysis_ok=%s', uid, len(saved_photos), analysis_result is not None)
     return jsonify({
