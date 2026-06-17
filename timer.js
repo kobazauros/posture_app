@@ -19,15 +19,15 @@ function playBeep(frequency, duration) {
         gainNode.connect(audioCtx.destination);
         oscillator.type = 'sine';
         oscillator.frequency.value = frequency;
-        
+
         // Gentle attack and release to avoid clicking
         gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
         gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
         gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
-        
+
         oscillator.start(audioCtx.currentTime);
         oscillator.stop(audioCtx.currentTime + duration);
-    } catch (err) {}
+    } catch (err) { }
 }
 
 export function updateTimerUI() {
