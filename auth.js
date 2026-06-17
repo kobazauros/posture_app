@@ -4,7 +4,7 @@ import {
     TOKEN_STORAGE_KEY,
     state,
     url,
-} from './state.js?v=15';
+} from './state.js?v=16';
 
 /**
  * Reads a cookie value by name.
@@ -187,19 +187,9 @@ export async function initializeAuthSession() {
         }
     }
 
-    // No new token in URL — if we already have a valid sessionId in memory
-    // (e.g. fast page reload within the same browser tab / Telegram session),
-    // return it immediately without hitting the network.
-    if (state.sessionId) {
-        setAuthState(true, 'НАЧАТЬ');
-        return {
-            session_id: state.sessionId,
-            is_registered: state.isRegistered,
-            role: state.role,
-            first_name: state.firstName,
-            latest_analysis: state.latestAnalysis
-        };
-    }
+    // We intentionally do not return early here even if state.sessionId exists.
+    // By hitting the network (session/restore), we ensure we read the latest
+    // draft from the database, satisfying the user's request to "считать базу".
 
     // Proceed to attempt restore for this client if no token or claim failed.
     try {
