@@ -31,7 +31,9 @@ def encode_token(user_id, lifetime_sec=None):
     else:
         expires = int(time.time()) + lifetime_sec
 
-    plain_text = f"{user_id}:{expires}"
+    # Add a random salt to ensure token uniqueness
+    salt = os.urandom(4).hex()
+    plain_text = f"{user_id}:{expires}:{salt}"
     
     key_hash = hashlib.sha256(SECRET_WEB_TOKEN.encode()).digest()
     raw_bytes = plain_text.encode()
@@ -51,9 +53,10 @@ def decode_token(token_str):
         key_hash = hashlib.sha256(SECRET_WEB_TOKEN.encode()).digest()
         plain_bytes = bytearray(b ^ key_hash[i % len(key_hash)] for i, b in enumerate(cipher_bytes))
         
-        user_id, expires = plain_bytes.decode().split(':')
+        parts = plain_bytes.decode().split(':')
+        user_id = parts[0]
         try:
-            exp_int = int(expires)
+            exp_int = int(parts[1])
         except Exception:
             exp_int = 0
         # exp_int == 0 means "no expiry" (token valid until explicit close)
@@ -126,7 +129,9 @@ def register_token(user_id, token):
     # to avoid invalidating an active session when a new token is issued
     # (e.g., user pressed /start again). We only update the token value.
     if isinstance(existing, dict):
-        existing['token'] = token
+        if existing.get('token') != token:
+            existing['token'] = token
+            existing['claimed'] = False
         registry[str(user_id)] = existing
     else:
         registry[str(user_id)] = {
@@ -196,6 +201,6 @@ def validate_session(session_id):
 
     registry = load_session_registry()
     for user_id, entry in registry.items():
-        if isinstance(entry, dict) and entry.get("session_id") == session_id and entry.get("claimed"):
+        if isinstance(entry, dict) and entry.get("session_id") == session_id:
             return user_id
     return None

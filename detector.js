@@ -210,18 +210,24 @@ function evaluateCurrentPose(landmarks) {
             }
             break;
         case 1: // left side
-            if (leftEar && rightEar && landmarks[LM.NOSE] && leftEar.x < noseX && rightEar.x < noseX) {
-                valid = true;
-            } else {
-                message = 'Повернитесь к камере левым боком.';
+            if (leftEar && rightEar && landmarks[LM.NOSE]) {
+                if (state.currentFacing === 'user') {
+                    if (leftEar.x > noseX && rightEar.x > noseX) valid = true;
+                } else {
+                    if (leftEar.x < noseX && rightEar.x < noseX) valid = true;
+                }
             }
+            if (!valid) message = 'Повернитесь к камере левым боком.';
             break;
         case 2: // right side
-            if (leftEar && rightEar && landmarks[LM.NOSE] && leftEar.x > noseX && rightEar.x > noseX) {
-                valid = true;
-            } else {
-                message = 'Повернитесь к камере правым боком.';
+            if (leftEar && rightEar && landmarks[LM.NOSE]) {
+                if (state.currentFacing === 'user') {
+                    if (leftEar.x < noseX && rightEar.x < noseX) valid = true;
+                } else {
+                    if (leftEar.x > noseX && rightEar.x > noseX) valid = true;
+                }
             }
+            if (!valid) message = 'Повернитесь к камере правым боком.';
             break;
         case 3: // rear view
             if (leftEar && rightEar && landmarks[LM.NOSE] && leftEar.x < noseX && noseX < rightEar.x) {

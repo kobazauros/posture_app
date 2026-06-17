@@ -451,6 +451,7 @@ h2 {
     background: rgba(255, 255, 255, 0.8);
     border-color: rgba(255, 255, 255, 0.4);
     font-size: 0;
+    opacity: 1 !important;
 }
 
 #capture-btn.timer-waiting::after {
@@ -469,13 +470,14 @@ h2 {
 #capture-btn.timer-active {
     background: #34C759;
     border-color: #34C759;
-    color: #000;
-    /* Черный для максимального контраста */
+    color: #FFF;
+    /* Белый для контраста */
     font-size: 38px;
     font-weight: 800;
+    opacity: 1 !important;
 }
 
-#capture-btn:disabled {
+#capture-btn:disabled:not(.timer-active):not(.timer-waiting) {
     opacity: 0.3;
 }
 

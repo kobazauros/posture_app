@@ -4,6 +4,32 @@ let timerHoldInterval = null;
 let holdStartTime = 0;
 let captureCountdownInterval = null;
 
+let audioCtx = null;
+function playBeep(frequency, duration) {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+        
+        // Gentle attack and release to avoid clicking
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+        
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + duration);
+    } catch (err) {}
+}
+
 export function updateTimerUI() {
     const timerBtn = document.getElementById('timer-btn');
     if (!timerBtn) return;
@@ -123,11 +149,13 @@ export function handleCaptureWithTimer(captureCallback) {
                 if (state.currentCountdown > 0) {
                     captureBtn.innerText = state.currentCountdown;
                     if (navigator.vibrate) navigator.vibrate(50);
+                    playBeep(440, 0.2); // Normal beep
                 }
 
                 state.currentCountdown -= 1;
 
                 if (state.currentCountdown < 0) {
+                    playBeep(880, 0.4); // Higher, longer beep on capture
                     clearInterval(captureCountdownInterval);
                     state.isTimerPending = false;
                     captureBtn.innerText = '';
