@@ -52,10 +52,10 @@ export function bindTimerButton() {
 
     timerBtn.addEventListener('mousedown', startHold);
     timerBtn.addEventListener('touchstart', startHold, { passive: false });
-    
+
     timerBtn.addEventListener('mouseup', endHold);
     timerBtn.addEventListener('touchend', endHold);
-    
+
     timerBtn.addEventListener('mouseleave', cancelHold);
     timerBtn.addEventListener('touchcancel', cancelHold);
 }
@@ -79,7 +79,7 @@ export function handleCaptureWithTimer(captureCallback) {
     if (state.captureTimer > 0) {
         state.isTimerPending = true;
         state.currentCountdown = state.captureTimer;
-        
+
         captureBtn.innerText = 'Ждем...';
         captureBtn.classList.add('timer-waiting');
 
@@ -94,14 +94,14 @@ export function handleCaptureWithTimer(captureCallback) {
 
             if (canCapture) {
                 captureBtn.classList.remove('timer-waiting');
-                
+
                 if (state.currentCountdown > 0) {
                     captureBtn.innerText = state.currentCountdown;
                     if (navigator.vibrate) navigator.vibrate(50);
                 }
-                
+
                 state.currentCountdown -= 1;
-                
+
                 if (state.currentCountdown < 0) {
                     clearInterval(captureCountdownInterval);
                     state.isTimerPending = false;

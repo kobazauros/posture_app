@@ -44,13 +44,13 @@ function updateUI() {
     if (captureBtn) {
         const figureOk = !state.detectorReady || (state.figureInBounds && state.poseValid);
         const canCapture = isLevel && figureOk;
-        
+
         // If there's a timer set, the button is ALWAYS enabled (to start the timer wait loop)
         // If no timer, it's enabled only if canCapture is true.
         // We also disable it if isTimerPending is true to prevent multiple clicks.
         const shouldEnable = (!state.isTimerPending) && (state.captureTimer > 0 || canCapture);
         captureBtn.disabled = !shouldEnable;
-        
+
         if (state.isTimerPending) {
             // Appearance is handled by CSS (e.g. .timer-waiting) and JS
             captureBtn.classList.remove('ready');

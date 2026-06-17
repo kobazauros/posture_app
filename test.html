@@ -92,7 +92,7 @@
             border: 6px solid #34C759;
             transition: 0.2s;
             cursor: pointer;
-            
+
             /* Стили для цифр отсчета внутри */
             display: flex;
             justify-content: center;
@@ -153,7 +153,7 @@
     <script>
         const timerBtn = document.getElementById('timer-btn');
         const captureBtn = document.getElementById('capture-btn');
-        
+
         let timerValue = 0;
         let holdInterval = null;
 
@@ -207,7 +207,7 @@
                 // Демонстрация режима "Ожидание"
                 captureBtn.classList.add('timer-waiting');
                 captureBtn.innerText = 'Ждем...';
-                
+
                 // Через секунду представим, что фигура в кадре, начинаем отсчет
                 setTimeout(() => {
                     captureBtn.classList.remove('timer-waiting');
