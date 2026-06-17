@@ -79,9 +79,9 @@ def send_welcome(message):
     
     # Формируем ссылку с ID пользователя для идентификации на сервере
     clean_url = WEB_URL.rstrip('/')
-    # Передаем токен ТОЛЬКО через хэш, без query-параметров (?v=11), 
-    # чтобы браузер гарантированно брал закэшированную версию страницы.
-    personal_link = f"{clean_url}/#t={secure_token}"
+    # Добавляем параметр версии, чтобы Telegram-браузер сбросил кэш главной страницы (index.html)
+    # иначе он будет всегда грузить старый index.html с v=11
+    personal_link = f"{clean_url}/?v=12#t={secure_token}"
     
     # Создаем клавиатуру с кнопкой-ссылкой (url= заставляет открыть внешний браузер)
     markup = types.InlineKeyboardMarkup()

@@ -1,4 +1,4 @@
-import { state } from './state.js?v=11';
+import { state } from './state.js?v=12';
 
 let timerHoldInterval = null;
 let holdStartTime = 0;
@@ -16,6 +16,17 @@ export function updateTimerUI() {
     }
 }
 
+function updateBadge(value, isVisible) {
+    const badge = document.getElementById('timer-badge');
+    if (!badge) return;
+    if (isVisible) {
+        badge.innerText = value + 'с';
+        badge.classList.add('visible');
+    } else {
+        badge.classList.remove('visible');
+    }
+}
+
 export function bindTimerButton() {
     const timerBtn = document.getElementById('timer-btn');
     if (!timerBtn) return;
@@ -23,10 +34,18 @@ export function bindTimerButton() {
     const startHold = (e) => {
         if (e.type === 'touchstart') e.preventDefault();
         holdStartTime = Date.now();
+        // Скрываем текст на кнопке, пока давим
+        timerBtn.innerText = '';
+        updateBadge(state.captureTimer, true);
+
         timerHoldInterval = setInterval(() => {
             if (state.captureTimer < 20) {
                 state.captureTimer += 1;
-                updateTimerUI();
+                updateBadge(state.captureTimer, true);
+                // Обновляем CSS-класс кнопки, но без текста
+                if (state.captureTimer > 0) {
+                    timerBtn.classList.add('has-timer');
+                }
             }
         }, 500);
     };
@@ -36,11 +55,13 @@ export function bindTimerButton() {
             clearInterval(timerHoldInterval);
             timerHoldInterval = null;
         }
+        updateBadge(0, false);
+
         // Если удержание было коротким (< 300мс), сбрасываем таймер
         if (Date.now() - holdStartTime < 300) {
             state.captureTimer = 0;
-            updateTimerUI();
         }
+        updateTimerUI();
     };
 
     const cancelHold = () => {
@@ -48,6 +69,8 @@ export function bindTimerButton() {
             clearInterval(timerHoldInterval);
             timerHoldInterval = null;
         }
+        updateBadge(0, false);
+        updateTimerUI();
     };
 
     timerBtn.addEventListener('mousedown', startHold);
@@ -80,8 +103,9 @@ export function handleCaptureWithTimer(captureCallback) {
         state.isTimerPending = true;
         state.currentCountdown = state.captureTimer;
 
-        captureBtn.innerText = 'Ждем...';
+        captureBtn.innerText = '';
         captureBtn.classList.add('timer-waiting');
+        captureBtn.classList.remove('timer-active');
 
         captureCountdownInterval = setInterval(() => {
             if (!state.isTimerPending) {
@@ -94,6 +118,7 @@ export function handleCaptureWithTimer(captureCallback) {
 
             if (canCapture) {
                 captureBtn.classList.remove('timer-waiting');
+                captureBtn.classList.add('timer-active');
 
                 if (state.currentCountdown > 0) {
                     captureBtn.innerText = state.currentCountdown;
@@ -106,13 +131,15 @@ export function handleCaptureWithTimer(captureCallback) {
                     clearInterval(captureCountdownInterval);
                     state.isTimerPending = false;
                     captureBtn.innerText = '';
+                    captureBtn.classList.remove('timer-active');
                     captureCallback();
                 }
             } else {
                 // Сброс таймера к начальному значению, если условия не выполнены
                 state.currentCountdown = state.captureTimer;
                 captureBtn.classList.add('timer-waiting');
-                captureBtn.innerText = 'Ждем...';
+                captureBtn.classList.remove('timer-active');
+                captureBtn.innerText = '';
             }
         }, 1000);
     } else {

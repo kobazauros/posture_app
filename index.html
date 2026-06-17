@@ -4,6 +4,7 @@
 <head>
     <meta name="theme-color" content="#000000">
     <meta name="color-scheme" content="dark">
+    <link rel="stylesheet" href="style.css?v=12">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -255,7 +256,10 @@
         <div id="status">Выровняйте телефон</div>
 
         <div id="controls-bar">
-            <button id="timer-btn" class="side-btn"></button>
+            <div style="position: relative; display: flex; justify-content: center; align-items: center;">
+                <div id="timer-badge"></div>
+                <button id="timer-btn" class="side-btn"></button>
+            </div>
             <div id="capture-area">
                 <div id="zoom-indicator">Зум 1.0x</div>
                 <button id="capture-btn" disabled></button>
@@ -296,7 +300,7 @@
 
     <!-- Visual debug removed -->
 
-    <script type="module" src="app.js?v=11"></script>
+    <script type="module" src="app.js?v=12"></script>
 </body>
 
 </html>

@@ -61,11 +61,36 @@
             transition: all 0.2s;
         }
 
-        /* Если таймер включен (в JS мы добавим класс .has-timer и уберем иконку) */
+        /* Если таймер включен */
         #timer-btn.has-timer {
             background-image: none;
             background-color: #34C759;
             border-color: #34C759;
+        }
+
+        /* Всплывающий бейдж над кнопкой таймера */
+        #timer-badge {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s, top 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        #timer-badge.visible {
+            opacity: 1;
+            top: -45px;
         }
 
         /* --- ЦЕНТРАЛЬНАЯ КНОПКА СЪЕМКИ --- */
@@ -89,7 +114,7 @@
             height: 75px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.6);
-            border: 6px solid #34C759;
+            border: 6px solid rgba(255, 255, 255, 0.2);
             transition: 0.2s;
             cursor: pointer;
 
@@ -102,12 +127,42 @@
             color: #000;
         }
 
-        /* Кнопка в режиме ожидания (желтая) */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Кнопка в режиме ожидания позы (Спиннер Cyan) */
         #capture-btn.timer-waiting {
-            background: rgba(255, 214, 10, 0.8);
-            border-color: #FFD60A;
-            font-size: 14px;
-            font-weight: 700;
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(255, 255, 255, 0.4);
+            font-size: 0;
+        }
+
+        #capture-btn.timer-waiting::after {
+            content: "";
+            display: block;
+            width: 34px;
+            height: 34px;
+            border: 4px solid rgba(0, 255, 255, 0.2);
+            border-top-color: #00FFFF;
+            /* Цвет отвеса Cyan */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Активный отсчет (непрозрачная зеленая кнопка) */
+        #capture-btn.timer-active {
+            background: #34C759;
+            border-color: #34C759;
+            color: #000;
+            font-size: 38px;
+            font-weight: 800;
         }
 
         /* Иконка переворота камеры (заглушка) */
@@ -137,13 +192,15 @@
     </div>
 
     <div id="controls-bar">
-        <!-- Кнопка Таймера -->
-        <button id="timer-btn" class="side-btn"></button>
+        <div style="position: relative; display: flex; justify-content: center; align-items: center;">
+            <div id="timer-badge"></div>
+            <button id="timer-btn" class="side-btn"></button>
+        </div>
 
         <div id="capture-area">
             <div id="zoom-indicator">Зум 1.0x</div>
             <!-- Центральная Кнопка -->
-            <button id="capture-btn" class="ready"></button>
+            <button id="capture-btn"></button>
         </div>
 
         <!-- Кнопка Камеры -->
@@ -152,10 +209,12 @@
 
     <script>
         const timerBtn = document.getElementById('timer-btn');
+        const badge = document.getElementById('timer-badge');
         const captureBtn = document.getElementById('capture-btn');
 
         let timerValue = 0;
         let holdInterval = null;
+        let holdStartTime = 0;
 
         // Обновление UI кнопки таймера
         function updateTimerUI() {
@@ -168,15 +227,35 @@
             }
         }
 
-        // Логика зажатия (растет на +1 каждые 500мс)
-        timerBtn.addEventListener('mousedown', () => {
+        function updateBadge(value, isVisible) {
+            if (isVisible) {
+                badge.innerText = value + 'с';
+                badge.classList.add('visible');
+            } else {
+                badge.classList.remove('visible');
+            }
+        }
+
+        // Логика зажатия
+        const startHold = (e) => {
+            if (e.type === 'touchstart') e.preventDefault();
+            holdStartTime = Date.now();
+            timerBtn.innerText = ''; // Скрываем текст во время удержания
+            updateBadge(timerValue, true);
+
             holdInterval = setInterval(() => {
                 if (timerValue < 20) {
                     timerValue += 1;
-                    updateTimerUI();
+                    updateBadge(timerValue, true);
+                    if (timerValue > 0) {
+                        timerBtn.classList.add('has-timer');
+                    }
                 }
             }, 500);
-        });
+        };
+
+        timerBtn.addEventListener('mousedown', startHold);
+        timerBtn.addEventListener('touchstart', startHold, { passive: false });
 
         // Отпускание
         const endHold = () => {
@@ -184,33 +263,39 @@
                 clearInterval(holdInterval);
                 holdInterval = null;
             }
+            updateBadge(0, false);
+
+            if (Date.now() - holdStartTime < 300) {
+                timerValue = 0;
+            }
+            updateTimerUI();
         };
 
         timerBtn.addEventListener('mouseup', endHold);
-        timerBtn.addEventListener('mouseleave', endHold);
+        timerBtn.addEventListener('touchend', endHold);
 
-        // Короткий клик сбрасывает в 0
-        timerBtn.addEventListener('click', () => {
-            // Если мы только что отпустили долгое нажатие, значение уже больше 0.
-            // Но чтобы отличать короткий клик от конца долгого удержания, 
-            // в реальном коде добавим проверку времени. 
-            // Для демо - двойной клик или просто сброс:
-            if (!holdInterval) {
-                timerValue = 0;
+        const cancelHold = () => {
+            if (holdInterval) {
+                clearInterval(holdInterval);
+                holdInterval = null;
+                updateBadge(0, false);
                 updateTimerUI();
             }
-        });
+        };
+        timerBtn.addEventListener('mouseleave', cancelHold);
+        timerBtn.addEventListener('touchcancel', cancelHold);
 
         // Логика кнопки съемки
         captureBtn.addEventListener('click', () => {
             if (timerValue > 0) {
                 // Демонстрация режима "Ожидание"
                 captureBtn.classList.add('timer-waiting');
-                captureBtn.innerText = 'Ждем...';
 
-                // Через секунду представим, что фигура в кадре, начинаем отсчет
+                // Через 2 секунды представим, что фигура в кадре, начинаем отсчет
                 setTimeout(() => {
                     captureBtn.classList.remove('timer-waiting');
+                    captureBtn.classList.add('timer-active');
+
                     let current = timerValue;
                     captureBtn.innerText = current;
 
@@ -220,6 +305,7 @@
                             captureBtn.innerText = current;
                         } else {
                             clearInterval(countdown);
+                            captureBtn.classList.remove('timer-active');
                             captureBtn.innerText = '';
                             alert('📸 Снимок сделан!');
                         }

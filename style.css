@@ -436,12 +436,43 @@ h2 {
     transform: scale(1.1);
 }
 
-/* Кнопка в режиме ожидания позы */
+/* Кнопка в режиме ожидания позы (Спиннер Cyan) */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 #capture-btn.timer-waiting {
-    background: rgba(255, 214, 10, 0.8);
-    border-color: #FFD60A;
-    font-size: 14px;
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.4);
+    font-size: 0;
+}
+
+#capture-btn.timer-waiting::after {
+    content: "";
+    display: block;
+    width: 34px;
+    height: 34px;
+    border: 4px solid rgba(0, 255, 255, 0.2);
+    border-top-color: #00FFFF;
+    /* Цвет отвеса Cyan */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Активный отсчет (непрозрачная зеленая кнопка) */
+#capture-btn.timer-active {
+    background: #34C759;
+    border-color: #34C759;
     color: #000;
+    /* Черный для максимального контраста */
+    font-size: 38px;
+    font-weight: 800;
 }
 
 #capture-btn:disabled {
@@ -484,6 +515,31 @@ h2 {
     background-repeat: no-repeat;
     background-position: center;
     transition: all 0.2s;
+}
+
+/* Всплывающий бейдж над кнопкой таймера */
+#timer-badge {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s, top 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+}
+
+#timer-badge.visible {
+    opacity: 1;
+    top: -45px;
 }
 
 /* Когда таймер > 0, убираем иконку и показываем цифру с буквой 'с' */

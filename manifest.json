@@ -1,7 +1,7 @@
 {
   "name": "Posture Pro",
   "short_name": "Posture Pro",
-  "start_url": "./?v=11",
+  "start_url": "./?v=12",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000"
