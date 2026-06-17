@@ -58,45 +58,11 @@ def correct_image_perspective(img, pitch_deg, roll_deg, K):
     
     return corrected_img
 
-def get_focal_length_from_exif(image_path, width, height, fallback_35mm=26.0):
+def get_camera_matrix(width, height, focal_35mm=26.0):
     """
-    Извлекает фокусное расстояние из EXIF (с поддержкой iOS/Android).
-    В случае неудачи использует fallback_35mm (стандартно 26 мм для шириков смартфонов).
-    Возвращает фокусное в пикселях (f_px) и матрицу камеры (K).
+    Вычисляет матрицу камеры (K) и фокусное расстояние в пикселях 
+    на основе эквивалентного фокусного расстояния (по умолчанию 26 мм).
     """
-    focal_35mm = fallback_35mm
-    try:
-        img = Image.open(image_path)
-        exif = img.getexif()
-        
-        found = False
-        if exif is not None:
-            for tag_id, value in exif.items():
-                tag = ExifTags.TAGS.get(tag_id, tag_id)
-                if tag == 'FocalLengthIn35mmFilm':
-                    focal_35mm = float(value)
-                    found = True
-                    break
-        
-        # Если не нашли в базовом EXIF, ищем во вложенном ExifOffset
-        if not found and hasattr(img, '_getexif') and img._getexif():
-            exif_dict = img._getexif()
-            if exif_dict:
-                for tag_id, value in exif_dict.items():
-                    tag = ExifTags.TAGS.get(tag_id, tag_id)
-                    if tag == 'FocalLengthIn35mmFilm':
-                        focal_35mm = float(value)
-                        found = True
-                        break
-                        
-        if found:
-            print(f"  EXIF: Найдено эквивалентное фокусное расстояние {focal_35mm}mm")
-        else:
-            print(f"  EXIF: Фокусное расстояние не найдено. Используем стандартное для смартфона {fallback_35mm}mm")
-
-    except Exception as e:
-        print(f"  EXIF: Ошибка при чтении ({e}). Используем fallback = {fallback_35mm}mm")
-        
     # Вычисляем фокусное расстояние в пикселях
     # Диагональ / ширина полного кадра ~ 36мм (если ориентация горизонтальная) или 24мм (если вертикальная)
     sensor_width_mm = 36.0 if width >= height else 24.0

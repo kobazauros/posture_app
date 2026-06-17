@@ -9,10 +9,13 @@ import traceback
 from datetime import datetime
 try:
     from analyze import analyze_posture_gemini
-except Exception:
+except Exception as e:
+    import traceback
+    print("Error importing analyze_posture_gemini:")
+    traceback.print_exc()
     # analysis backend is optional for endpoint testing; provide a stub
     def analyze_posture_gemini(images=None, patient_data=None):
-        raise RuntimeError('analysis backend not available in test environment')
+        raise RuntimeError(f'analysis backend not available in test environment: {e}')
 
 from service import generate_pdf_from_analysis, deliver_pdf_to_telegram
 from security import decode_token, claim_token, restore_session, validate_session
@@ -192,12 +195,12 @@ def upload():
                 try:
                     import cv2
                     import numpy as np
-                    from perspective_utils import correct_image_perspective, get_focal_length_from_exif
+                    from perspective_utils import correct_image_perspective, get_camera_matrix
                     np_arr = np.frombuffer(img_data, np.uint8)
                     img_cv = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
                     if img_cv is not None:
                         h, w = img_cv.shape[:2]
-                        _, K = get_focal_length_from_exif("", w, h, fallback_35mm=26.0)
+                        _, K = get_camera_matrix(w, h, focal_35mm=26.0)
                         corrected_cv = correct_image_perspective(img_cv, pitch, roll, K)
                         
                         success, buffer = cv2.imencode('.jpg', corrected_cv, [cv2.IMWRITE_JPEG_QUALITY, 90])
@@ -239,7 +242,6 @@ def upload():
                     logger.warning("piexif not installed. Cannot save orientation to EXIF.")
                 except Exception as e:
                     logger.warning("Failed to save EXIF orientation: %s", e)
-                    
             saved_photos.append(filename)
         except Exception as e:
             print(f"Ошибка при сохранении изображения {i}: {e}")
