@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Демонстрация таймера</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+        }
+
+        /* Симулируем нижнюю панель камеры */
+        #controls-bar {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+        }
+
+        /* Базовый стиль боковых кнопок */
+        .side-btn {
+            width: 48px;
+            height: 48px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* --- ДИЗАЙН КНОПКИ ТАЙМЕРА --- */
+        #timer-btn {
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            /* Векторная иконка секундомера */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' /%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 2.25V4.5M19.5 7.125l-1.5 1.5' /%3E%3C/svg%3E");
+            background-size: 24px;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 0.2s;
+        }
+
+        /* Если таймер включен (в JS мы добавим класс .has-timer и уберем иконку) */
+        #timer-btn.has-timer {
+            background-image: none;
+            background-color: #34C759;
+            border-color: #34C759;
+        }
+
+        /* --- ЦЕНТРАЛЬНАЯ КНОПКА СЪЕМКИ --- */
+        #capture-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #zoom-indicator {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 13px;
+        }
+
+        #capture-btn {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            border: 6px solid #34C759;
+            transition: 0.2s;
+            cursor: pointer;
+            
+            /* Стили для цифр отсчета внутри */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #000;
+        }
+
+        /* Кнопка в режиме ожидания (желтая) */
+        #capture-btn.timer-waiting {
+            background: rgba(255, 214, 10, 0.8);
+            border-color: #FFD60A;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Иконка переворота камеры (заглушка) */
+        #switch-cam-btn {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'/%3E%3C/svg%3E");
+            background-size: 32px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Простенькая инструкция в центре экрана */
+        .instruction {
+            text-align: center;
+            color: #888;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="instruction">
+        <p>1. Кликните на таймер, чтобы "выключить" его (0с).</p>
+        <p>2. Удерживайте кнопку таймера, чтобы набрать секунды.</p>
+        <p>3. Нажмите кнопку съемки.</p>
+    </div>
+
+    <div id="controls-bar">
+        <!-- Кнопка Таймера -->
+        <button id="timer-btn" class="side-btn"></button>
+
+        <div id="capture-area">
+            <div id="zoom-indicator">Зум 1.0x</div>
+            <!-- Центральная Кнопка -->
+            <button id="capture-btn" class="ready"></button>
+        </div>
+
+        <!-- Кнопка Камеры -->
+        <button id="switch-cam-btn" class="side-btn"></button>
+    </div>
+
+    <script>
+        const timerBtn = document.getElementById('timer-btn');
+        const captureBtn = document.getElementById('capture-btn');
+        
+        let timerValue = 0;
+        let holdInterval = null;
+
+        // Обновление UI кнопки таймера
+        function updateTimerUI() {
+            if (timerValue > 0) {
+                timerBtn.classList.add('has-timer');
+                timerBtn.innerText = timerValue + 'с';
+            } else {
+                timerBtn.classList.remove('has-timer');
+                timerBtn.innerText = '';
+            }
+        }
+
+        // Логика зажатия (растет на +1 каждые 500мс)
+        timerBtn.addEventListener('mousedown', () => {
+            holdInterval = setInterval(() => {
+                if (timerValue < 20) {
+                    timerValue += 1;
+                    updateTimerUI();
+                }
+            }, 500);
+        });
+
+        // Отпускание
+        const endHold = () => {
+            if (holdInterval) {
+                clearInterval(holdInterval);
+                holdInterval = null;
+            }
+        };
+
+        timerBtn.addEventListener('mouseup', endHold);
+        timerBtn.addEventListener('mouseleave', endHold);
+
+        // Короткий клик сбрасывает в 0
+        timerBtn.addEventListener('click', () => {
+            // Если мы только что отпустили долгое нажатие, значение уже больше 0.
+            // Но чтобы отличать короткий клик от конца долгого удержания, 
+            // в реальном коде добавим проверку времени. 
+            // Для демо - двойной клик или просто сброс:
+            if (!holdInterval) {
+                timerValue = 0;
+                updateTimerUI();
+            }
+        });
+
+        // Логика кнопки съемки
+        captureBtn.addEventListener('click', () => {
+            if (timerValue > 0) {
+                // Демонстрация режима "Ожидание"
+                captureBtn.classList.add('timer-waiting');
+                captureBtn.innerText = 'Ждем...';
+                
+                // Через секунду представим, что фигура в кадре, начинаем отсчет
+                setTimeout(() => {
+                    captureBtn.classList.remove('timer-waiting');
+                    let current = timerValue;
+                    captureBtn.innerText = current;
+
+                    let countdown = setInterval(() => {
+                        current -= 1;
+                        if (current > 0) {
+                            captureBtn.innerText = current;
+                        } else {
+                            clearInterval(countdown);
+                            captureBtn.innerText = '';
+                            alert('📸 Снимок сделан!');
+                        }
+                    }, 1000);
+                }, 2000);
+            } else {
+                alert('📸 Снимок сделан мгновенно!');
+            }
+        });
+    </script>
+</body>
+
+</html>

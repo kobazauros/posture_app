@@ -419,6 +419,13 @@ h2 {
     background: #fff;
     border: 6px solid rgba(255, 255, 255, 0.2);
     transition: 0.2s;
+    /* Стили для текста таймера внутри кнопки */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: 800;
+    color: #000;
 }
 
 #capture-btn.ready {
@@ -427,6 +434,14 @@ h2 {
     background: rgba(255, 255, 255, 0.6);
     /* А вот фон становится полупрозрачным белым */
     transform: scale(1.1);
+}
+
+/* Кнопка в режиме ожидания позы */
+#capture-btn.timer-waiting {
+    background: rgba(255, 214, 10, 0.8);
+    border-color: #FFD60A;
+    font-size: 14px;
+    color: #000;
 }
 
 #capture-btn:disabled {
@@ -450,29 +465,32 @@ h2 {
     opacity: 0.5;
 }
 
-/* ИКОНКА ГАЛЕРЕИ (в стиле iOS: скругленный квадрат) */
-#gallery-btn {
-    border-radius: 10px;
-    /* Аккуратный скругленный квадрат, а не круг */
-    background-color: rgba(0, 0, 0, 0.4);
-    /* Чуть затемненный фон, если пусто */
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    /* Очень тонкая, деликатная рамка вместо белого обруча */
-    background-size: cover;
-    background-position: center;
-    overflow: hidden;
-}
-
-/* Векторная иконка "картинка" (показывается, пока нет фото) */
-#gallery-btn:not(.has-photo) {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.8)' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z'/%3E%3C/svg%3E");
-    background-size: 26px;
+/* Кнопка таймера слева с иконкой секундомера */
+#timer-btn {
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    /* Векторная иконка секундомера */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' /%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 2.25V4.5M19.5 7.125l-1.5 1.5' /%3E%3C/svg%3E");
+    background-size: 24px;
     background-repeat: no-repeat;
+    background-position: center;
+    transition: all 0.2s;
 }
 
-/* Убиваем старый эмодзи */
-#gallery-btn:not(.has-photo)::after {
-    content: none;
+/* Когда таймер > 0, убираем иконку и показываем цифру с буквой 'с' */
+#timer-btn.has-timer {
+    background-image: none;
+    background-color: #34C759;
+    border-color: #34C759;
 }
 
 

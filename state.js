@@ -57,6 +57,11 @@ export const state = {
     poseErrorMessage: '',
     latestAnalysis: null,
     analysisId: null,
+    // Timer fields
+    captureTimer: 0,
+    isTimerPending: false,
+    currentCountdown: 0,
+    isLevel: false,
 };
 
 /**

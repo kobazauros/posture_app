@@ -1,7 +1,7 @@
 import { state, stepLabels } from './state.js?v=11';
 import { sendPhotosToServer } from './upload.js?v=11';
 import { getFigureStatus } from './detector.js?v=11';
-
+import { bindTimerButton, handleCaptureWithTimer } from './timer.js?v=11';
 /**
  * Updates the visible step label for the capture flow.
  * @returns {void}
@@ -141,9 +141,11 @@ export function bindCaptureHandlers() {
     const retakeBtn = document.getElementById('retake-btn');
     const nextStepBtn = document.getElementById('next-step-btn');
 
+    bindTimerButton();
+
     if (captureBtn) {
         captureBtn.onclick = () => {
-            captureFrameToPreview();
+            handleCaptureWithTimer(captureFrameToPreview);
         };
     }
 
