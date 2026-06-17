@@ -1,13 +1,13 @@
 /**
  * Application bootstrap that wires together auth, form, camera, and capture modules.
  */
-import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=12';
-import { attachFormValidation, validateForm } from './form.js?v=12';
-import { startCamera, switchCameraFacing } from './camera.js?v=12';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=12';
-import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=12';
-import { initDetector } from './detector.js?v=12';
-import { closeOrRedirect } from './upload.js?v=12';
+import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=15';
+import { attachFormValidation, validateForm } from './form.js?v=15';
+import { startCamera, switchCameraFacing } from './camera.js?v=15';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=15';
+import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=15';
+import { initDetector } from './detector.js?v=15';
+import { closeOrRedirect } from './upload.js?v=15';
 
 
 bootstrapAuthFromUrl();
@@ -123,7 +123,7 @@ async function routeUser() {
 
         setTimeout(() => {
             if (['client', 'admin', 'specialist-approved'].includes(authData.role)) {
-                if (authData.role === 'client' && state.latestAnalysis) {
+                if (['client', 'admin'].includes(authData.role) && state.latestAnalysis) {
                     const latest = state.latestAnalysis;
                     if (latest.age) document.getElementById('user-age').value = latest.age;
                     if (latest.weight) document.getElementById('user-weight').value = latest.weight;
@@ -312,6 +312,10 @@ async function handleToCameraClick() {
         const draftData = await draftRes.json();
         if (draftData.status === 'success' && draftData.analysis_id) {
             state.analysisId = draftData.analysis_id;
+            state.latestAnalysis = { age, weight, height, gender: selectedGender };
+            try {
+                sessionStorage.setItem('posture_app_analysis', JSON.stringify(state.latestAnalysis));
+            } catch (e) { }
         }
     } catch (err) {
         console.warn('[app] save_draft failed', err);

@@ -81,7 +81,7 @@ def send_welcome(message):
     clean_url = WEB_URL.rstrip('/')
     # Добавляем параметр версии, чтобы Telegram-браузер сбросил кэш главной страницы (index.html)
     # иначе он будет всегда грузить старый index.html с v=11
-    personal_link = f"{clean_url}/?v=12#t={secure_token}"
+    personal_link = f"{clean_url}/?v=13#t={secure_token}"
     
     # Создаем клавиатуру с кнопкой-ссылкой (url= заставляет открыть внешний браузер)
     markup = types.InlineKeyboardMarkup()

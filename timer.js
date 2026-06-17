@@ -1,4 +1,4 @@
-import { state } from './state.js?v=12';
+import { state } from './state.js?v=13';
 
 let timerHoldInterval = null;
 let holdStartTime = 0;

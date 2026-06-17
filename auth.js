@@ -4,7 +4,7 @@ import {
     TOKEN_STORAGE_KEY,
     state,
     url,
-} from './state.js?v=12';
+} from './state.js?v=15';
 
 /**
  * Reads a cookie value by name.
@@ -86,8 +86,16 @@ export function bootstrapAuthFromUrl() {
     try {
         state.token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
         state.sessionId = sessionStorage.getItem(SESSION_STORAGE_KEY);
+
+        state.isRegistered = sessionStorage.getItem('posture_app_is_reg') === 'true';
+        state.role = sessionStorage.getItem('posture_app_role');
+        state.firstName = sessionStorage.getItem('posture_app_fname');
+        const cachedAnalysis = sessionStorage.getItem('posture_app_analysis');
+        if (cachedAnalysis && cachedAnalysis !== 'undefined') {
+            state.latestAnalysis = JSON.parse(cachedAnalysis);
+        }
     } catch (err) {
-        console.warn('[auth] unable to read token from sessionStorage', err);
+        console.warn('[auth] unable to read state from sessionStorage', err);
         state.token = null;
         state.sessionId = null;
     }
@@ -159,6 +167,13 @@ export async function initializeAuthSession() {
                 state.firstName = payload.first_name;
                 state.latestAnalysis = payload.latest_analysis;
 
+                try {
+                    sessionStorage.setItem('posture_app_is_reg', state.isRegistered);
+                    sessionStorage.setItem('posture_app_role', state.role || '');
+                    sessionStorage.setItem('posture_app_fname', state.firstName || '');
+                    sessionStorage.setItem('posture_app_analysis', JSON.stringify(state.latestAnalysis || null));
+                } catch (e) { }
+
                 return payload;
             } else {
                 console.warn('[auth] session claim failed', payload);
@@ -177,7 +192,13 @@ export async function initializeAuthSession() {
     // return it immediately without hitting the network.
     if (state.sessionId) {
         setAuthState(true, 'НАЧАТЬ');
-        return { session_id: state.sessionId, is_registered: state.isRegistered, role: state.role, first_name: state.firstName };
+        return {
+            session_id: state.sessionId,
+            is_registered: state.isRegistered,
+            role: state.role,
+            first_name: state.firstName,
+            latest_analysis: state.latestAnalysis
+        };
     }
 
     // Proceed to attempt restore for this client if no token or claim failed.
@@ -203,6 +224,13 @@ export async function initializeAuthSession() {
             state.role = restoredPayload.role;
             state.firstName = restoredPayload.first_name;
             state.latestAnalysis = restoredPayload.latest_analysis;
+
+            try {
+                sessionStorage.setItem('posture_app_is_reg', state.isRegistered);
+                sessionStorage.setItem('posture_app_role', state.role || '');
+                sessionStorage.setItem('posture_app_fname', state.firstName || '');
+                sessionStorage.setItem('posture_app_analysis', JSON.stringify(state.latestAnalysis || null));
+            } catch (e) { }
 
             return restoredPayload;
         }
