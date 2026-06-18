@@ -1,6 +1,7 @@
 __pycache__/*
 received_photos/*
 results/*
+.agents/rules/*.md
 .env
 .venv/*
 *.toml
