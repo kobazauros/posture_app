@@ -3,319 +3,227 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Демонстрация таймера</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор типа анализа (Тест полного экрана)</title>
+    <!-- Загружаем новые стили проекта -->
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="form.css">
     <style>
         body {
-            background-color: #000;
-            margin: 0;
+            /* Переопределяем body для центрирования в тестовом файле */
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-        }
-
-        /* Симулируем нижнюю панель камеры */
-        #controls-bar {
-            position: absolute;
-            bottom: 40px;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 40px;
+            min-height: 100vh;
         }
 
-        /* Базовый стиль боковых кнопок */
-        .side-btn {
-            width: 48px;
-            height: 48px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            outline: none;
-        }
-
-        /* --- ДИЗАЙН КНОПКИ ТАЙМЕРА --- */
-        #timer-btn {
-            border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: #fff;
-            font-size: 15px;
-            font-weight: 700;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            /* Векторная иконка секундомера */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' /%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 2.25V4.5M19.5 7.125l-1.5 1.5' /%3E%3C/svg%3E");
-            background-size: 24px;
-            background-repeat: no-repeat;
-            background-position: center;
-            transition: all 0.2s;
-        }
-
-        /* Если таймер включен */
-        #timer-btn.has-timer {
-            background-image: none;
-            background-color: #34C759;
-            border-color: #34C759;
-        }
-
-        /* Всплывающий бейдж над кнопкой таймера */
-        #timer-badge {
-            position: absolute;
-            top: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.2s, top 0.2s;
-            pointer-events: none;
-            white-space: nowrap;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-        }
-
-        #timer-badge.visible {
-            opacity: 1;
-            top: -45px;
-        }
-
-        /* --- ЦЕНТРАЛЬНАЯ КНОПКА СЪЕМКИ --- */
-        #capture-area {
+        /* Дополнительные стили для карточек тарифов (в будущем добавим в form.css) */
+        .plan-options {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 10px;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
-        #zoom-indicator {
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            font-size: 13px;
-        }
-
-        #capture-btn {
-            width: 75px;
-            height: 75px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            border: 6px solid rgba(255, 255, 255, 0.2);
-            transition: 0.2s;
+        .plan-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-main);
+            border-radius: 12px;
+            padding: 16px;
             cursor: pointer;
-
-            /* Стили для цифр отсчета внутри */
+            transition: all 0.2s ease;
+            position: relative;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 32px;
-            font-weight: 800;
-            color: #000;
+            align-items: flex-start;
+            gap: 12px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+        .plan-card input[type="radio"] {
+            display: none;
         }
 
-        /* Кнопка в режиме ожидания позы (Спиннер Cyan) */
-        #capture-btn.timer-waiting {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(255, 255, 255, 0.4);
-            font-size: 0;
+        .plan-card input[type="radio"]:checked+.card-content-wrapper {
+            opacity: 1;
         }
 
-        #capture-btn.timer-waiting::after {
-            content: "";
-            display: block;
-            width: 34px;
-            height: 34px;
-            border: 4px solid rgba(0, 255, 255, 0.2);
-            border-top-color: #00FFFF;
-            /* Цвет отвеса Cyan */
+        .plan-card.selected {
+            border-color: var(--color-green);
+        }
+
+        .check-circle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            border: 2px solid var(--border-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
         }
 
-        /* Активный отсчет (непрозрачная зеленая кнопка) */
-        #capture-btn.timer-active {
-            background: #34C759;
-            border-color: #34C759;
+        .check-circle svg {
+            width: 14px;
+            height: 14px;
+            color: transparent;
+            stroke-width: 3px;
+            transition: 0.2s;
+        }
+
+        .plan-card.selected .check-circle {
+            background-color: var(--color-green);
+            border-color: var(--color-green);
+        }
+
+        .plan-card.selected .check-circle svg {
+            color: var(--bg-main);
+        }
+
+        .card-content-wrapper {
+            flex: 1;
+            padding-right: 30px;
+        }
+
+        .plan-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0 0 4px 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plan-badge {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .plan-card.selected .plan-badge {
+            background: var(--color-green);
             color: #000;
-            font-size: 38px;
-            font-weight: 800;
         }
 
-        /* Иконка переворота камеры (заглушка) */
-        #switch-cam-btn {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'/%3E%3C/svg%3E");
-            background-size: 32px;
-            background-repeat: no-repeat;
-            background-position: center;
+        .plan-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.4;
         }
 
-        /* Простенькая инструкция в центре экрана */
-        .instruction {
-            text-align: center;
-            color: #888;
-            max-width: 300px;
-            line-height: 1.5;
+        @media (prefers-color-scheme: light) {
+            .plan-card.selected .plan-badge {
+                color: #fff;
+            }
+
+            .plan-card.selected .check-circle svg {
+                color: #fff;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="instruction">
-        <p>1. Кликните на таймер, чтобы "выключить" его (0с).</p>
-        <p>2. Удерживайте кнопку таймера, чтобы набрать секунды.</p>
-        <p>3. Нажмите кнопку съемки.</p>
-    </div>
+    <div class="form-container">
+        <h2>Анализ осанки</h2>
 
-    <div id="controls-bar">
-        <div style="position: relative; display: flex; justify-content: center; align-items: center;">
-            <div id="timer-badge"></div>
-            <button id="timer-btn" class="side-btn"></button>
+        <!-- Стандартные поля анкеты -->
+        <div class="input-group">
+            <input type="number" id="user-age" placeholder="Возраст" inputmode="numeric" min="1" max="120" required>
+            <div class="field-error" id="age-error" aria-live="polite"></div>
+
+            <input type="number" id="user-weight" placeholder="Вес (кг)" inputmode="numeric" min="20" max="300"
+                required>
+            <div class="field-error" id="weight-error" aria-live="polite"></div>
+
+            <input type="number" id="user-height" placeholder="Рост (см)" inputmode="numeric" min="50" max="250"
+                required>
+            <div class="field-error" id="height-error" aria-live="polite"></div>
+
+            <div class="gender-toggle">
+                <input type="radio" id="gender-male" name="gender" value="male" checked>
+                <label for="gender-male">Муж.</label>
+
+                <input type="radio" id="gender-female" name="gender" value="female">
+                <label for="gender-female">Жен.</label>
+            </div>
         </div>
 
-        <div id="capture-area">
-            <div id="zoom-indicator">Зум 1.0x</div>
-            <!-- Центральная Кнопка -->
-            <button id="capture-btn"></button>
+        <label class="helper-switch">
+            <div class="helper-switch-text">
+                <strong>Съемка со стороны</strong>
+                <span>Добавит 4-й ракурс со спины</span>
+            </div>
+            <input type="checkbox" id="has-helper">
+            <span class="slider"></span>
+        </label>
+
+        <!-- БЛОК ВЫБОРА ТИПА АНАЛИЗА -->
+        <div class="plan-options">
+            <!-- БАЗОВЫЙ ПЛАН -->
+            <label class="plan-card selected" id="card-basic">
+                <input type="radio" name="analysis_type" value="basic" checked onchange="updateSelection()">
+                <div class="card-content-wrapper">
+                    <h3 class="plan-title">ИИ-Диагностика <span class="plan-badge"
+                            style="background:transparent; border:1px solid #333;">BASIC</span></h3>
+                    <p class="plan-desc">Анализ фотографий с помощью нейросети и автоматический подбор упражнений</p>
+                </div>
+                <div class="check-circle">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                    </svg>
+                </div>
+            </label>
+
+            <!-- ПРЕМИУМ ПЛАН -->
+            <label class="plan-card" id="card-premium">
+                <input type="radio" name="analysis_type" value="premium" onchange="updateSelection()">
+                <div class="card-content-wrapper">
+                    <h3 class="plan-title">Экспертный Контроль <span class="plan-badge">PREMIUM</span></h3>
+                    <p class="plan-desc">Анализ фотографий и подбор упражнений под контролем сертифицированного специалиста.</p>
+                </div>
+                <div class="check-circle">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                    </svg>
+                </div>
+            </label>
         </div>
 
-        <!-- Кнопка Камеры -->
-        <button id="switch-cam-btn" class="side-btn"></button>
+        <button id="to-camera-btn" class="primary-btn" onclick="alert('Выбран: ' + document.querySelector('input[name=analysis_type]:checked').value)">НАЧАТЬ</button>
     </div>
 
     <script>
-        const timerBtn = document.getElementById('timer-btn');
-        const badge = document.getElementById('timer-badge');
-        const captureBtn = document.getElementById('capture-btn');
+        function updateSelection() {
+            const radios = document.getElementsByName('analysis_type');
+            const cardBasic = document.getElementById('card-basic');
+            const cardPremium = document.getElementById('card-premium');
 
-        let timerValue = 0;
-        let holdInterval = null;
-        let holdStartTime = 0;
+            let selectedValue = 'basic';
+            radios.forEach(r => {
+                if (r.checked) selectedValue = r.value;
+            });
 
-        // Обновление UI кнопки таймера
-        function updateTimerUI() {
-            if (timerValue > 0) {
-                timerBtn.classList.add('has-timer');
-                timerBtn.innerText = timerValue + 'с';
+            if (selectedValue === 'basic') {
+                cardBasic.classList.add('selected');
+                cardPremium.classList.remove('selected');
             } else {
-                timerBtn.classList.remove('has-timer');
-                timerBtn.innerText = '';
+                cardPremium.classList.add('selected');
+                cardBasic.classList.remove('selected');
             }
         }
-
-        function updateBadge(value, isVisible) {
-            if (isVisible) {
-                badge.innerText = value + 'с';
-                badge.classList.add('visible');
-            } else {
-                badge.classList.remove('visible');
-            }
-        }
-
-        // Логика зажатия
-        const startHold = (e) => {
-            if (e.type === 'touchstart') e.preventDefault();
-            holdStartTime = Date.now();
-            timerBtn.innerText = ''; // Скрываем текст во время удержания
-            updateBadge(timerValue, true);
-
-            holdInterval = setInterval(() => {
-                if (timerValue < 20) {
-                    timerValue += 1;
-                    updateBadge(timerValue, true);
-                    if (timerValue > 0) {
-                        timerBtn.classList.add('has-timer');
-                    }
-                }
-            }, 500);
-        };
-
-        timerBtn.addEventListener('mousedown', startHold);
-        timerBtn.addEventListener('touchstart', startHold, { passive: false });
-
-        // Отпускание
-        const endHold = () => {
-            if (holdInterval) {
-                clearInterval(holdInterval);
-                holdInterval = null;
-            }
-            updateBadge(0, false);
-
-            if (Date.now() - holdStartTime < 300) {
-                timerValue = 0;
-            }
-            updateTimerUI();
-        };
-
-        timerBtn.addEventListener('mouseup', endHold);
-        timerBtn.addEventListener('touchend', endHold);
-
-        const cancelHold = () => {
-            if (holdInterval) {
-                clearInterval(holdInterval);
-                holdInterval = null;
-                updateBadge(0, false);
-                updateTimerUI();
-            }
-        };
-        timerBtn.addEventListener('mouseleave', cancelHold);
-        timerBtn.addEventListener('touchcancel', cancelHold);
-
-        // Логика кнопки съемки
-        captureBtn.addEventListener('click', () => {
-            if (timerValue > 0) {
-                // Демонстрация режима "Ожидание"
-                captureBtn.classList.add('timer-waiting');
-
-                // Через 2 секунды представим, что фигура в кадре, начинаем отсчет
-                setTimeout(() => {
-                    captureBtn.classList.remove('timer-waiting');
-                    captureBtn.classList.add('timer-active');
-
-                    let current = timerValue;
-                    captureBtn.innerText = current;
-
-                    let countdown = setInterval(() => {
-                        current -= 1;
-                        if (current > 0) {
-                            captureBtn.innerText = current;
-                        } else {
-                            clearInterval(countdown);
-                            captureBtn.classList.remove('timer-active');
-                            captureBtn.innerText = '';
-                            alert('📸 Снимок сделан!');
-                        }
-                    }, 1000);
-                }, 2000);
-            } else {
-                alert('📸 Снимок сделан мгновенно!');
-            }
-        });
     </script>
+
 </body>
 
 </html>

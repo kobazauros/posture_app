@@ -1,0 +1,86 @@
+/* splash.css - Стили сплэш-экрана */
+
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #050505;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+}
+
+.splash-center {
+    text-align: left;
+}
+
+.splash-logo {
+    font-family: 'Inter', 'SF Pro Display', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.1;
+    margin: 0 0 15px 0;
+    letter-spacing: 1px;
+}
+
+.neon-cursor {
+    color: var(--color-green);
+    animation: blink 1s step-end infinite;
+    margin-left: 6px;
+    font-size: 38px;
+    vertical-align: baseline;
+}
+
+.splash-footer {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #7A8B99;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+#splash-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.splash-progress {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 20px auto 0;
+    overflow: hidden;
+}
+
+.splash-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    transition: width 10s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+/* Light theme overrides for splash screen */
+@media (prefers-color-scheme: light) {
+    #splash-screen {
+        background-color: var(--bg-main) !important;
+    }
+
+    .splash-logo {
+        color: var(--text-primary) !important;
+    }
+}

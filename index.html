@@ -228,6 +228,38 @@
                 <input type="checkbox" id="has-helper">
                 <span class="slider"></span>
             </label>
+            <!-- БЛОК ВЫБОРА ТИПА АНАЛИЗА -->
+            <div class="plan-options">
+                <!-- БАЗОВЫЙ ПЛАН -->
+                <label class="plan-card selected" id="card-basic">
+                    <input type="radio" name="analysis_type" value="basic" checked onchange="updateSelection()">
+                    <div class="card-content-wrapper">
+                        <h3 class="plan-title">ИИ-Диагностика <span class="plan-badge"
+                                style="background:transparent; border:1px solid #333;">BASIC</span></h3>
+                        <p class="plan-desc">Анализ фотографий с помощью нейросети и автоматический подбор упражнений</p>
+                    </div>
+                    <div class="check-circle">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                        </svg>
+                    </div>
+                </label>
+    
+                <!-- ПРЕМИУМ ПЛАН -->
+                <label class="plan-card" id="card-premium">
+                    <input type="radio" name="analysis_type" value="premium" onchange="updateSelection()">
+                    <div class="card-content-wrapper">
+                        <h3 class="plan-title">Экспертный Контроль <span class="plan-badge">PREMIUM</span></h3>
+                        <p class="plan-desc">Анализ фотографий и подбор упражнений под контролем сертифицированного специалиста.</p>
+                    </div>
+                    <div class="check-circle">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                        </svg>
+                    </div>
+                </label>
+            </div>
+
             <button id="to-camera-btn">НАЧАТЬ</button>
         </div>
     </div>

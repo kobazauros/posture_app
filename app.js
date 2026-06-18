@@ -371,3 +371,25 @@ if (switchCamBtn) {
 
 // Do not initialize session on page load. Sessions are opened when user
 // explicitly enters the camera flow via `to-camera` button.
+
+// Глобальная функция для обновления стилей выбранной карточки тарифа
+window.updateSelection = function() {
+    const radios = document.getElementsByName('analysis_type');
+    const cardBasic = document.getElementById('card-basic');
+    const cardPremium = document.getElementById('card-premium');
+
+    if (!cardBasic || !cardPremium) return;
+
+    let selectedValue = 'basic';
+    radios.forEach(r => {
+        if (r.checked) selectedValue = r.value;
+    });
+
+    if (selectedValue === 'basic') {
+        cardBasic.classList.add('selected');
+        cardPremium.classList.remove('selected');
+    } else {
+        cardPremium.classList.add('selected');
+        cardBasic.classList.remove('selected');
+    }
+};
