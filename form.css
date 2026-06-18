@@ -311,11 +311,64 @@
         color: #fff;
     }
 }
-.profile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; }
-.profile-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--color-green); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; }
-.profile-info { display: flex; flex-direction: column; }
-.profile-title { font-size: 13px; color: var(--text-secondary); }
-.profile-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
-.filter-chips { display: flex; gap: 10px; margin-bottom: 20px; }
-.filter-chip { padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px; font-weight: 500; color: var(--text-secondary); background: transparent; cursor: pointer; transition: all 0.2s ease; user-select: none; }
-.filter-chip.active { background: var(--color-green); color: white; border-color: var(--color-green); }
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-green);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.profile-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.filter-chips {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-chip {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.filter-chip.active {
+    background: var(--color-green);
+    color: white;
+    border-color: var(--color-green);
+}

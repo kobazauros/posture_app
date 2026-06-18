@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nameEl = document.getElementById('specialist-name');
     const avatarEl = document.getElementById('specialist-avatar');
-    
+
     let fullName = 'Специалист';
     if (userFirstName) {
         fullName = `Д-р ${userFirstName}`;
@@ -19,20 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
             fullName += ` ${userLastName}`;
         }
     }
-    
+
     if (nameEl) {
         nameEl.textContent = fullName;
     }
-    
+
     if (avatarEl) {
         let initials = '';
         if (userFirstName) initials += userFirstName.charAt(0).toUpperCase();
         if (userLastName) initials += userLastName.charAt(0).toUpperCase();
-        
+
         if (!initials) initials = 'С';
-        
+
         avatarEl.textContent = initials;
-        
+
         if (initials.length > 1) {
             avatarEl.style.fontSize = '14px';
         } else {
