@@ -1,6 +1,6 @@
 """Flask entrypoint for posture analysis uploads, sessions, and PDF delivery."""
 
-from flask import Flask, request, jsonify, send_from_directory, abort
+from flask import Flask, request, jsonify, send_from_directory, abort, redirect
 import base64
 import os
 import json
@@ -120,8 +120,9 @@ def save_draft():
     weight = user_data.get('weight')
     height = user_data.get('height')
     gender = user_data.get('gender')
+    analysis_type = user_data.get('analysis_type', 'basic')
     
-    analysis_id = save_draft_analysis(uid, age, weight, height, gender)
+    analysis_id = save_draft_analysis(uid, age, weight, height, gender, analysis_type)
     if analysis_id is not None:
         return jsonify({'status': 'success', 'analysis_id': analysis_id})
     else:
@@ -322,6 +323,86 @@ def upload():
         'analysis_error': analysis_error,
         'pdf_report': pdf_report,
     })
+
+
+
+import database
+def get_user_from_request(req):
+    session_id = req.headers.get('Authorization')
+    if not session_id and req.is_json:
+        session_id = req.json.get('session_id')
+    if not session_id:
+        session_id = req.args.get('session_id')
+        
+    if not session_id:
+        return None
+        
+    uid = validate_session(session_id)
+    if not uid:
+        return None
+        
+    user = database.get_user_by_telegram_id(str(uid))
+    return user
+
+# --- SPECIALIST CABINET ROUTES ---
+
+
+@app.route('/specialist')
+def specialist_dashboard():
+    """Serves the specialist dashboard HTML page."""
+    return send_from_directory('.', 'specialist.html')
+
+@app.route('/api/specialist/clients', methods=['GET'])
+def api_specialist_clients():
+    user = get_user_from_request(request)
+    if not user or user.get('role') not in ['specialist-approved']:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    query = request.args.get('query', '')
+    limit = int(request.args.get('limit', 20))
+    offset = int(request.args.get('offset', 0))
+    
+    specialist_id = user['id']
+    clients = database.search_specialist_clients(specialist_id, query, limit, offset)
+    return jsonify({'clients': clients})
+
+@app.route('/api/specialist/pool', methods=['GET'])
+def api_specialist_pool():
+    user = get_user_from_request(request)
+    if not user or user.get('role') not in ['specialist-approved']:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    limit = int(request.args.get('limit', 20))
+    offset = int(request.args.get('offset', 0))
+    
+    pool = database.get_premium_pool(limit, offset)
+    return jsonify({'pool': pool})
+
+@app.route('/api/specialist/analyses/<int:analysis_id>/assign', methods=['POST'])
+def api_assign_analysis(analysis_id):
+    user = get_user_from_request(request)
+    if not user or user.get('role') not in ['specialist-approved']:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    success = database.assign_analysis(analysis_id, user['id'])
+    if success:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Failed to assign analysis'}), 500
+
+@app.route('/api/specialist/analyses/<int:analysis_id>/recommendations', methods=['PUT'])
+def api_update_recommendations(analysis_id):
+    user = get_user_from_request(request)
+    if not user or user.get('role') not in ['specialist-approved']:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    data = request.json
+    if not data or 'recommendations' not in data:
+        return jsonify({'error': 'Missing recommendations'}), 400
+        
+    success = database.update_recommendations(analysis_id, data['recommendations'])
+    if success:
+        return jsonify({'success': True})
+    return jsonify({'error': 'Failed to update recommendations'}), 500
 
 if __name__ == '__main__':
     # Запуск на порту 8001

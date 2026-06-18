@@ -3,6 +3,7 @@
 .form-container {
     width: 85%;
     max-width: 400px;
+    margin: auto;
 }
 
 .form-container h2 {
@@ -157,6 +158,7 @@
 
 /* Light theme overrides */
 @media (prefers-color-scheme: light) {
+
     .helper-switch-text strong,
     .form-subtitle {
         color: var(--text-primary) !important;

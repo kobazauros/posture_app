@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Кабинет Специалиста</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .client-card {
+            cursor: default;
+        }
+
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .client-date {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-waiting {
+            background: rgba(255, 159, 10, 0.2);
+            color: #ff9f0a;
+            border: 1px solid rgba(255, 159, 10, 0.4);
+        }
+
+        .status-done {
+            background: rgba(52, 199, 89, 0.2);
+            color: var(--color-green);
+            border: 1px solid rgba(52, 199, 89, 0.4);
+        }
+
+        .card-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-actions .action-btn {
+            height: 44px;
+            font-size: 15px;
+        }
+
+        /* Stub screen styles */
+        .stub-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .stub-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard-screen" class="screen">
+        <div class="form-container" style="max-width: 600px; padding-top: 20px;">
+
+            <div class="dashboard-header">
+                <h2 class="form-title" style="margin-bottom: 0;">Кабинет</h2>
+                <div style="color: var(--text-secondary); font-size: 14px;" id="specialist-name">Загрузка...</div>
+            </div>
+
+            <div class="gender-toggle" style="margin-bottom: 25px;">
+                <input type="radio" id="tab-my" name="dashboard_tab" value="my_clients" checked>
+                <label for="tab-my">Мои клиенты</label>
+
+                <input type="radio" id="tab-pool" name="dashboard_tab" value="pool">
+                <label for="tab-pool">
+                    Новые заявки <span class="plan-badge" id="pool-badge"
+                        style="display:none; background:var(--color-red);">0</span>
+                </label>
+            </div>
+
+            <div id="pool-filters" style="display: none; gap: 15px; margin-bottom: 20px;">
+                <label
+                    style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-primary); cursor: pointer;">
+                    <input type="checkbox" id="filter-new" checked
+                        style="accent-color: var(--color-green); width: 16px; height: 16px;">
+                    Новые клиенты
+                </label>
+                <label
+                    style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-primary); cursor: pointer;">
+                    <input type="checkbox" id="filter-returning" checked
+                        style="accent-color: var(--color-green); width: 16px; height: 16px;">
+                    Повторные клиенты
+                </label>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 25px;">
+                <input type="text" id="search-client" class="input-field" placeholder="Поиск по клиентам...">
+            </div>
+
+            <!-- List container -->
+            <div class="plan-options" id="clients-list">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div id="loading-indicator"
+                style="text-align: center; margin: 20px 0; color: var(--text-secondary); display: none;">
+                Загрузка...
+            </div>
+
+            <button id="btn-add-client" class="secondary-btn action-btn"
+                style="width: 100%; margin-top: 20px; border-style: dashed;">+ ДОБАВИТЬ КЛИЕНТА</button>
+
+        </div>
+    </div>
+
+    <!-- STUB SCREEN (Correction) -->
+    <div id="stub-screen" class="screen stub-screen">
+        <div class="form-container" style="max-width: 600px;">
+            <div class="stub-icon">🛠️</div>
+            <h2 class="form-title">Экран корректировки</h2>
+            <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 30px;">
+                Данный экран находится в разработке. Здесь специалист сможет видеть фотографии пациента, рассчитанные ИИ
+                углы, и редактировать сгенерированный список упражнений перед отправкой финального PDF-отчета клиенту.
+            </p>
+            <button class="primary-btn action-btn" onclick="closeStubScreen()" style="width: 100%;">ВЕРНУТЬСЯ В
+                КАБИНЕТ</button>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL (History) -->
+    <div id="profile-screen" class="screen stub-screen">
+        <div class="form-container" style="max-width: 600px; text-align: left;">
+            <h2 class="form-title" id="profile-name">История</h2>
+            <div class="plan-options" id="profile-history-list">
+                <!-- Dynamically populated -->
+            </div>
+            <button class="secondary-btn action-btn" onclick="closeProfileScreen()"
+                style="width: 100%; margin-top: 20px;">НАЗАД</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="specialist_dashboard.js?v=2"></script>
+</body>
+
+</html>

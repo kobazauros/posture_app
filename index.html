@@ -234,9 +234,8 @@
                 <label class="plan-card selected" id="card-basic">
                     <input type="radio" name="analysis_type" value="basic" checked onchange="updateSelection()">
                     <div class="card-content-wrapper">
-                        <h3 class="plan-title">ИИ-Диагностика <span class="plan-badge"
-                                style="background:transparent; border:1px solid #333;">BASIC</span></h3>
-                        <p class="plan-desc">Анализ фотографий с помощью нейросети и автоматический подбор упражнений</p>
+                        <h3 class="plan-title">ИИ-Диагностика <span class="plan-badge">BASIC</span></h3>
+                        <p class="plan-desc">Быстрый анализ осанки нейросетью</p>
                     </div>
                     <div class="check-circle">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -244,13 +243,13 @@
                         </svg>
                     </div>
                 </label>
-    
+
                 <!-- ПРЕМИУМ ПЛАН -->
                 <label class="plan-card" id="card-premium">
                     <input type="radio" name="analysis_type" value="premium" onchange="updateSelection()">
                     <div class="card-content-wrapper">
                         <h3 class="plan-title">Экспертный Контроль <span class="plan-badge">PREMIUM</span></h3>
-                        <p class="plan-desc">Анализ фотографий и подбор упражнений под контролем сертифицированного специалиста.</p>
+                        <p class="plan-desc">Оценка сертифицированным специалистом</p>
                     </div>
                     <div class="check-circle">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -320,10 +319,13 @@
         </div>
     </div>
 
-    <div id="error-screen" class="screen" style="display:none;">
-        <div class="error-card">
-            <h2 style="text-align: center;">Ошибка авторизации</h2>
-            <p class="error-desc">Ссылка недействительна или устарела.<br><br>Пожалуйста, <b>закройте это окно</b>
+    <div id="error-screen" class="screen" style="display:none; background: var(--tg-theme-bg-color, var(--bg-main));">
+        <div class="error-card"
+            style="background: var(--tg-theme-secondary-bg-color, var(--bg-panel)); color: var(--tg-theme-text-color, var(--text-primary)); border: 1px solid var(--tg-theme-hint-color, var(--border-main));">
+            <h2 style="text-align: center; color: var(--tg-theme-text-color, var(--text-primary));">Ошибка авторизации
+            </h2>
+            <p class="error-desc" style="color: var(--tg-theme-text-color, var(--text-primary)); opacity: 0.8;">Ссылка
+                недействительна или устарела.<br><br>Пожалуйста, <b>закройте это окно</b>
                 (кнопка сверху), вернитесь в чат с ботом и нажмите <b>/start</b> для получения новой ссылки.</p>
         </div>
     </div>
@@ -331,7 +333,7 @@
 
     <!-- Visual debug removed -->
 
-    <script type="module" src="app.js?v=16"></script>
+    <script type="module" src="app.js?v=17"></script>
 </body>
 
 </html>

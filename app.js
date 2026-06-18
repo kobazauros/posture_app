@@ -111,6 +111,11 @@ async function routeUser() {
         return;
     }
 
+    if (authData.role === 'specialist-approved') {
+        window.location.href = 'specialist';
+        return;
+    }
+
     if (!authData.is_registered) {
         showScreen('onboarding-screen');
     } else {
@@ -291,6 +296,8 @@ async function handleToCameraClick() {
     const age = document.getElementById('user-age').value;
     const weight = document.getElementById('user-weight').value;
     const height = document.getElementById('user-height').value;
+    const analysisTypeInput = document.querySelector('input[name="analysis_type"]:checked');
+    const analysisType = analysisTypeInput ? analysisTypeInput.value : 'basic';
 
     const toCameraBtn = document.getElementById('to-camera-btn');
     if (toCameraBtn) {
@@ -306,13 +313,13 @@ async function handleToCameraClick() {
                 session_id: state.sessionId,
                 client_id: state.clientId,
                 token: sessionStorage.getItem('posture_app_token') || state.token,
-                user_data: { age, weight, height, gender: selectedGender }
+                user_data: { age, weight, height, gender: selectedGender, analysis_type: analysisType }
             })
         });
         const draftData = await draftRes.json();
         if (draftData.status === 'success' && draftData.analysis_id) {
             state.analysisId = draftData.analysis_id;
-            state.latestAnalysis = { age, weight, height, gender: selectedGender };
+            state.latestAnalysis = { age, weight, height, gender: selectedGender, analysis_type: analysisType };
             try {
                 sessionStorage.setItem('posture_app_analysis', JSON.stringify(state.latestAnalysis));
             } catch (e) { }
@@ -373,7 +380,7 @@ if (switchCamBtn) {
 // explicitly enters the camera flow via `to-camera` button.
 
 // Глобальная функция для обновления стилей выбранной карточки тарифа
-window.updateSelection = function() {
+window.updateSelection = function () {
     const radios = document.getElementsByName('analysis_type');
     const cardBasic = document.getElementById('card-basic');
     const cardPremium = document.getElementById('card-premium');

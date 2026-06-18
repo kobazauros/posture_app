@@ -30,7 +30,7 @@ h2 {
     background: var(--bg-main);
     z-index: 300;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     overflow-y: auto;
     padding: 24px 0 calc(env(safe-area-inset-bottom, 0px) + 24px);
@@ -66,6 +66,18 @@ h2 {
     background: rgba(255, 255, 255, 0.25);
 }
 
+@media (prefers-color-scheme: light) {
+    .secondary-btn {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--text-primary);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .secondary-btn:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
+
 /* Главная Кнопка (зелёная) */
 .primary-btn,
 .send-btn {
@@ -84,9 +96,17 @@ h2 {
 }
 
 @keyframes sendPulse {
-    0% { box-shadow: 0 0 15px rgba(52, 199, 89, 0.4); }
-    50% { box-shadow: 0 0 30px rgba(52, 199, 89, 0.7); }
-    100% { box-shadow: 0 0 15px rgba(52, 199, 89, 0.4); }
+    0% {
+        box-shadow: 0 0 15px rgba(52, 199, 89, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(52, 199, 89, 0.7);
+    }
+
+    100% {
+        box-shadow: 0 0 15px rgba(52, 199, 89, 0.4);
+    }
 }
 
 /* Light theme overrides (для базовых элементов) */
@@ -94,7 +114,9 @@ h2 {
     h2 {
         color: var(--text-primary) !important;
     }
-    body, .screen {
+
+    body,
+    .screen {
         background-color: var(--bg-main) !important;
         color: var(--text-primary) !important;
     }

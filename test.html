@@ -3,226 +3,172 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Выбор типа анализа (Тест полного экрана)</title>
-    <!-- Загружаем новые стили проекта -->
-    <link rel="stylesheet" href="theme.css">
-    <link rel="stylesheet" href="base.css">
-    <link rel="stylesheet" href="form.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Кабинет Специалиста</title>
+    <!-- Используем текущие стили -->
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            /* Переопределяем body для центрирования в тестовом файле */
+        /* Небольшие локальные дополнения для дашборда на основе текущих переменных */
+        .dashboard-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            margin-bottom: 20px;
         }
 
-        /* Дополнительные стили для карточек тарифов (в будущем добавим в form.css) */
-        .plan-options {
+        .client-card {
+            cursor: default;
+            /* Переопределяем курсор label */
+        }
+
+        .client-header {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .plan-card {
-            background-color: var(--bg-panel);
-            border: 1px solid var(--border-main);
-            border-radius: 12px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .plan-card input[type="radio"] {
-            display: none;
-        }
-
-        .plan-card input[type="radio"]:checked+.card-content-wrapper {
-            opacity: 1;
-        }
-
-        .plan-card.selected {
-            border-color: var(--color-green);
-        }
-
-        .check-circle {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid var(--border-main);
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            transition: 0.2s;
+            margin-bottom: 5px;
         }
 
-        .check-circle svg {
-            width: 14px;
-            height: 14px;
-            color: transparent;
-            stroke-width: 3px;
-            transition: 0.2s;
-        }
-
-        .plan-card.selected .check-circle {
-            background-color: var(--color-green);
-            border-color: var(--color-green);
-        }
-
-        .plan-card.selected .check-circle svg {
-            color: var(--bg-main);
-        }
-
-        .card-content-wrapper {
-            flex: 1;
-            padding-right: 30px;
-        }
-
-        .plan-title {
-            font-size: 16px;
-            font-weight: 500;
-            margin: 0 0 4px 0;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .plan-badge {
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
+        .client-date {
             color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
             text-transform: uppercase;
         }
 
-        .plan-card.selected .plan-badge {
-            background: var(--color-green);
-            color: #000;
+        .status-waiting {
+            background: rgba(255, 159, 10, 0.2);
+            color: #ff9f0a;
+            border: 1px solid rgba(255, 159, 10, 0.4);
         }
 
-        .plan-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin: 0;
-            line-height: 1.4;
+        .status-done {
+            background: rgba(52, 199, 89, 0.2);
+            color: var(--color-green);
+            border: 1px solid rgba(52, 199, 89, 0.4);
         }
 
-        @media (prefers-color-scheme: light) {
-            .plan-card.selected .plan-badge {
-                color: #fff;
-            }
+        .card-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
 
-            .plan-card.selected .check-circle svg {
-                color: #fff;
-            }
+        .card-actions .action-btn {
+            height: 44px;
+            font-size: 15px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="form-container">
-        <h2>Анализ осанки</h2>
+    <div id="dashboard-screen" class="screen">
+        <div class="form-container" style="max-width: 600px; padding-top: 20px;">
 
-        <!-- Стандартные поля анкеты -->
-        <div class="input-group">
-            <input type="number" id="user-age" placeholder="Возраст" inputmode="numeric" min="1" max="120" required>
-            <div class="field-error" id="age-error" aria-live="polite"></div>
-
-            <input type="number" id="user-weight" placeholder="Вес (кг)" inputmode="numeric" min="20" max="300"
-                required>
-            <div class="field-error" id="weight-error" aria-live="polite"></div>
-
-            <input type="number" id="user-height" placeholder="Рост (см)" inputmode="numeric" min="50" max="250"
-                required>
-            <div class="field-error" id="height-error" aria-live="polite"></div>
-
-            <div class="gender-toggle">
-                <input type="radio" id="gender-male" name="gender" value="male" checked>
-                <label for="gender-male">Муж.</label>
-
-                <input type="radio" id="gender-female" name="gender" value="female">
-                <label for="gender-female">Жен.</label>
+            <div class="dashboard-header">
+                <h2 class="form-title" style="margin-bottom: 0;">Кабинет</h2>
+                <div style="color: var(--text-secondary); font-size: 14px;">Д-р Константин</div>
             </div>
-        </div>
 
-        <label class="helper-switch">
-            <div class="helper-switch-text">
-                <strong>Съемка со стороны</strong>
-                <span>Добавит 4-й ракурс со спины</span>
+            <!-- ИСПОЛЬЗУЕМ СУЩЕСТВУЮЩИЙ ТАБ-ПЕРЕКЛЮЧАТЕЛЬ (ИЗ ПОЛА) -->
+            <div class="gender-toggle" style="margin-bottom: 25px;">
+                <label class="gender-option">
+                    <input type="radio" name="dashboard_tab" value="my_clients" checked>
+                    <div class="gender-btn">Мои клиенты</div>
+                </label>
+                <label class="gender-option">
+                    <input type="radio" name="dashboard_tab" value="pool">
+                    <div class="gender-btn">Новые заявки <span class="plan-badge"
+                            style="margin-left:5px; background:var(--color-red);">2</span></div>
+                </label>
             </div>
-            <input type="checkbox" id="has-helper">
-            <span class="slider"></span>
-        </label>
 
-        <!-- БЛОК ВЫБОРА ТИПА АНАЛИЗА -->
-        <div class="plan-options">
-            <!-- БАЗОВЫЙ ПЛАН -->
-            <label class="plan-card selected" id="card-basic">
-                <input type="radio" name="analysis_type" value="basic" checked onchange="updateSelection()">
-                <div class="card-content-wrapper">
-                    <h3 class="plan-title">ИИ-Диагностика <span class="plan-badge"
-                            style="background:transparent; border:1px solid #333;">BASIC</span></h3>
-                    <p class="plan-desc">Анализ фотографий с помощью нейросети и автоматический подбор упражнений</p>
-                </div>
-                <div class="check-circle">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
-                    </svg>
-                </div>
-            </label>
+            <!-- ФИЛЬТРЫ ДЛЯ ВЛАДКИ "НОВЫЕ ЗАЯВКИ" -->
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <label
+                    style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-primary); cursor: pointer;">
+                    <input type="checkbox" checked style="accent-color: var(--color-green); width: 16px; height: 16px;">
+                    Новые клиенты
+                </label>
+                <label
+                    style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-primary); cursor: pointer;">
+                    <input type="checkbox" checked style="accent-color: var(--color-green); width: 16px; height: 16px;">
+                    Повторные клиенты
+                </label>
+            </div>
 
-            <!-- ПРЕМИУМ ПЛАН -->
-            <label class="plan-card" id="card-premium">
-                <input type="radio" name="analysis_type" value="premium" onchange="updateSelection()">
-                <div class="card-content-wrapper">
-                    <h3 class="plan-title">Экспертный Контроль <span class="plan-badge">PREMIUM</span></h3>
-                    <p class="plan-desc">Анализ фотографий и подбор упражнений под контролем сертифицированного специалиста.</p>
+            <!-- ИСПОЛЬЗУЕМ СУЩЕСТВУЮЩЕЕ ПОЛЕ ВВОДА ДЛЯ ПОИСКА -->
+            <div class="input-group" style="margin-bottom: 25px;">
+                <input type="text" id="search-client" class="input-field" placeholder="Поиск по пулу...">
+            </div>
+
+            <!-- СПИСОК КЛИЕНТОВ (ПУЛ ЗАЯВОК) -->
+            <div class="plan-options">
+
+                <!-- КЛИЕНТ 1 (Новая заявка - Первичный) -->
+                <div class="plan-card client-card"
+                    style="border-color: var(--color-green); box-shadow: 0 0 15px rgba(52, 199, 89, 0.1);">
+                    <div class="card-content-wrapper" style="width: 100%;">
+                        <div class="client-header">
+                            <h3 class="plan-title">Дмитрий Волков <span class="plan-badge">PREMIUM</span></h3>
+                            <span class="status-badge status-waiting">Ожидает разбора</span>
+                        </div>
+                        <p class="plan-desc">Мужчина, 32 года. Первичный анализ.</p>
+                        <div class="client-date" style="margin-top: 8px;">Заявка поступила: Сегодня, 14:30</div>
+
+                        <div class="card-actions">
+                            <button class="primary-btn action-btn">ВЗЯТЬ В РАБОТУ</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="check-circle">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
-                    </svg>
+
+                <!-- КЛИЕНТ 2 (Повторный клиент в пуле) -->
+                <div class="plan-card client-card">
+                    <div class="card-content-wrapper" style="width: 100%;">
+                        <div class="client-header">
+                            <h3 class="plan-title">Мария Ковальчук <span class="plan-badge">PREMIUM</span></h3>
+                            <span class="status-badge status-waiting"
+                                style="background: rgba(0, 255, 255, 0.2); color: var(--color-cyan); border-color: rgba(0, 255, 255, 0.4);">Повторный</span>
+                        </div>
+                        <p class="plan-desc">Женщина, 28 лет. Повторный анализ (Предыдущий: 2 мес. назад).</p>
+                        <div class="client-date" style="margin-top: 8px;">Заявка поступила: Вчера, 19:45</div>
+
+                        <div class="card-actions">
+                            <button class="primary-btn action-btn">ВЗЯТЬ В РАБОТУ</button>
+                            <button class="secondary-btn action-btn" style="flex: 0.5;">ПРОФИЛЬ</button>
+                        </div>
+                    </div>
                 </div>
-            </label>
+
+                <!-- КЛИЕНТ 3 (Свой клиент, для примера вкладки "Мои клиенты") -->
+                <div class="plan-card client-card" style="opacity: 0.7; display: none;">
+                    <div class="card-content-wrapper" style="width: 100%;">
+                        <div class="client-header">
+                            <h3 class="plan-title">Иван Иванов</h3>
+                            <span class="status-badge status-done">Завершено</span>
+                        </div>
+                        <p class="plan-desc">Последний разбор: Плечи (12°), Таз (5°).</p>
+                        <div class="client-date" style="margin-top: 8px;">12 июня 2026</div>
+
+                        <div class="card-actions">
+                            <button class="secondary-btn action-btn">ОТКРЫТЬ ПРОФИЛЬ</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="secondary-btn action-btn" style="width: 100%; margin-top: 20px; border-style: dashed;">+
+                ДОБАВИТЬ ОФФЛАЙН КЛИЕНТА</button>
+
         </div>
-
-        <button id="to-camera-btn" class="primary-btn" onclick="alert('Выбран: ' + document.querySelector('input[name=analysis_type]:checked').value)">НАЧАТЬ</button>
     </div>
-
-    <script>
-        function updateSelection() {
-            const radios = document.getElementsByName('analysis_type');
-            const cardBasic = document.getElementById('card-basic');
-            const cardPremium = document.getElementById('card-premium');
-
-            let selectedValue = 'basic';
-            radios.forEach(r => {
-                if (r.checked) selectedValue = r.value;
-            });
-
-            if (selectedValue === 'basic') {
-                cardBasic.classList.add('selected');
-                cardPremium.classList.remove('selected');
-            } else {
-                cardPremium.classList.add('selected');
-                cardBasic.classList.remove('selected');
-            }
-        }
-    </script>
 
 </body>
 
