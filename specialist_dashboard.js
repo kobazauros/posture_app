@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sessionId = sessionStorage.getItem('posture_app_session_id');
     const userRole = sessionStorage.getItem('posture_app_role');
     const userFirstName = sessionStorage.getItem('posture_app_fname');
+    const userLastName = sessionStorage.getItem('posture_app_lname');
 
     if (!sessionId || userRole !== 'specialist-approved') {
         window.location.href = './';
@@ -9,8 +10,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const nameEl = document.getElementById('specialist-name');
+    const avatarEl = document.getElementById('specialist-avatar');
+    
+    let fullName = 'Специалист';
+    if (userFirstName) {
+        fullName = `Д-р ${userFirstName}`;
+        if (userLastName) {
+            fullName += ` ${userLastName}`;
+        }
+    }
+    
     if (nameEl) {
-        nameEl.textContent = userFirstName ? `Д-р ${userFirstName}` : 'Специалист';
+        nameEl.textContent = fullName;
+    }
+    
+    if (avatarEl) {
+        let initials = '';
+        if (userFirstName) initials += userFirstName.charAt(0).toUpperCase();
+        if (userLastName) initials += userLastName.charAt(0).toUpperCase();
+        
+        if (!initials) initials = 'С';
+        
+        avatarEl.textContent = initials;
+        
+        if (initials.length > 1) {
+            avatarEl.style.fontSize = '14px';
+        } else {
+            avatarEl.style.fontSize = '16px';
+        }
     }
 
     // State
@@ -21,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const LIMIT = 20;
     let isLoading = false;
     let hasMore = true;
+    let currentRequestId = 0;
 
     // Elements
     const tabRadios = document.querySelectorAll('input[name="dashboard_tab"]');
@@ -28,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-client');
     const listContainer = document.getElementById('clients-list');
     const loadingIndicator = document.getElementById('loading-indicator');
-    const filterNew = document.getElementById('filter-new');
-    const filterReturning = document.getElementById('filter-returning');
+    const filterNew = document.getElementById('chip-filter-new');
+    const filterReturning = document.getElementById('chip-filter-returning');
 
     // Init
     tabRadios.forEach(radio => {
@@ -50,8 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
         resetAndLoad();
     }, 500));
 
-    filterNew.addEventListener('change', renderList);
-    filterReturning.addEventListener('change', renderList);
+    function toggleChip(e) {
+        e.target.classList.toggle('active');
+        renderList();
+    }
+
+    filterNew.addEventListener('click', toggleChip);
+    filterReturning.addEventListener('click', toggleChip);
 
     // Infinite scroll
     window.addEventListener('scroll', () => {
@@ -75,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadData() {
+        const requestId = ++currentRequestId;
         isLoading = true;
         loadingIndicator.style.display = 'block';
 
@@ -86,6 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Authorization': sessionId }
             });
             const data = await res.json();
+
+            if (currentRequestId !== requestId) return;
 
             if (data.error) {
                 Swal.fire('Ошибка', data.error, 'error');
@@ -110,8 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to load data', err);
             Swal.fire('Ошибка', 'Не удалось загрузить данные', 'error');
         } finally {
-            isLoading = false;
-            loadingIndicator.style.display = 'none';
+            if (currentRequestId === requestId) {
+                isLoading = false;
+                loadingIndicator.style.display = 'none';
+            }
         }
     }
 
@@ -120,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let items = currentTab === 'my_clients' ? myClientsList : poolList;
 
         if (currentTab === 'pool') {
-            const showNew = filterNew.checked;
-            const showReturning = filterReturning.checked;
+            const showNew = filterNew.classList.contains('active');
+            const showReturning = filterReturning.classList.contains('active');
             items = items.filter(item => {
                 const total = parseInt(item.total_analyses || item.previous_count || 1);
                 if (total === 1 && showNew) return true;

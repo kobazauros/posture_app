@@ -49,6 +49,7 @@ def claim_session():
                 'session_id': entry.get('session_id'),
                 'is_registered': user is not None,
                 'first_name': user.get('first_name') if user else None,
+                'last_name': user.get('last_name') if user else None,
                 'role': user.get('role') if user else None,
                 'latest_analysis': latest_analysis
             })
@@ -69,6 +70,7 @@ def claim_session():
         'session_id': session_id,
         'is_registered': user is not None,
         'first_name': user.get('first_name') if user else None,
+        'last_name': user.get('last_name') if user else None,
         'role': user.get('role') if user else None,
         'latest_analysis': latest_analysis
     })
@@ -97,6 +99,7 @@ def restore_existing_session():
         'session_id': session_id,
         'is_registered': user is not None,
         'first_name': user.get('first_name') if user else None,
+        'last_name': user.get('last_name') if user else None,
         'role': user.get('role') if user else None,
         'latest_analysis': latest_analysis
     })
