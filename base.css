@@ -111,6 +111,7 @@ h2 {
 
 /* Light theme overrides (для базовых элементов) */
 @media (prefers-color-scheme: light) {
+
     body,
     .screen {
         background-color: var(--bg-main) !important;

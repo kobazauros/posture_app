@@ -90,6 +90,7 @@
 
 /* Light theme overrides */
 @media (prefers-color-scheme: light) {
+
     #sending-screen,
     #error-screen {
         background-color: var(--bg-main) !important;
