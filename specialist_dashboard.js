@@ -1,3 +1,8 @@
+import { attachFormValidation, validateForm, setFieldError } from './form.js?v=13';
+import { startCamera, switchCameraFacing } from './camera.js?v=13';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=13';
+import { state, stepLabels } from './state.js?v=13';
+
 document.addEventListener('DOMContentLoaded', () => {
     const sessionId = sessionStorage.getItem('posture_app_session_id');
     const userRole = sessionStorage.getItem('posture_app_role');
@@ -309,23 +314,150 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.closeProfileScreen = () => {
         document.getElementById('profile-screen').style.display = 'none';
-        document.getElementById('dashboard-screen').style.display = 'block';
+        document.getElementById('dashboard-screen').style.display = 'flex';
+        window.scrollTo(0, 0);
     };
 
     window.openCorrection = (id) => {
         // Open Stub screen for correction
         document.getElementById('dashboard-screen').style.display = 'none';
-        document.getElementById('stub-screen').style.display = 'block';
+        document.getElementById('stub-screen').style.display = 'flex';
     };
 
     window.closeStubScreen = () => {
         document.getElementById('stub-screen').style.display = 'none';
-        document.getElementById('dashboard-screen').style.display = 'block';
+        document.getElementById('dashboard-screen').style.display = 'flex';
+        window.scrollTo(0, 0);
     };
 
+    // Add Client Flow
     document.getElementById('btn-add-client').addEventListener('click', () => {
-        // Offline client - redirect to the camera (index.html)
-        window.location.href = './';
+        document.getElementById('dashboard-screen').style.display = 'none';
+        document.getElementById('form-screen').style.display = 'flex';
+
+        // Initialize logic for the capture flow
+        attachFormValidation();
+        bindCaptureHandlers();
+        updateStepIndicator();
+
+        // Prefill form from cached analysis if available
+        const cachedAnalysis = sessionStorage.getItem('posture_app_analysis');
+        if (cachedAnalysis && cachedAnalysis !== 'undefined') {
+            try {
+                const latest = JSON.parse(cachedAnalysis);
+                if (latest.status === 'draft' || !latest.status) {
+                    if (latest.patient_first_name) document.getElementById('patient-first-name').value = latest.patient_first_name;
+                    if (latest.patient_last_name) document.getElementById('patient-last-name').value = latest.patient_last_name;
+                    if (latest.age) document.getElementById('user-age').value = latest.age;
+                    if (latest.weight) document.getElementById('user-weight').value = latest.weight;
+                    if (latest.height) document.getElementById('user-height').value = latest.height;
+                    if (latest.gender === 'male' || latest.gender === 'female') {
+                        const r = document.getElementById('gender-' + latest.gender);
+                        if (r) r.checked = true;
+                    }
+                }
+            } catch (e) {
+                console.warn('[specialist] failed to parse cached analysis', e);
+            }
+        }
+
+        // Ensure state is set for specialist flow
+        state.sessionId = sessionId;
+        state.maxSteps = 4; // Force 4 photos
+    });
+
+    document.getElementById('cancel-client-btn').addEventListener('click', () => {
+        document.getElementById('form-screen').style.display = 'none';
+        document.getElementById('dashboard-screen').style.display = 'flex';
+        window.scrollTo(0, 0);
+    });
+
+    document.getElementById('switch-cam-btn')?.addEventListener('click', () => {
+        switchCameraFacing();
+    });
+
+    document.getElementById('to-camera-btn-specialist').addEventListener('click', async () => {
+        // Custom validation for names
+        const fnameInput = document.getElementById('patient-first-name');
+        const lnameInput = document.getElementById('patient-last-name');
+        let namesOk = true;
+
+        if (!fnameInput.value.trim()) {
+            setFieldError('patient-first-name', 'Введите имя пациента');
+            namesOk = false;
+        } else {
+            fnameInput.classList.remove('invalid');
+            document.getElementById('patient-first-name-error').textContent = '';
+        }
+
+        if (!lnameInput.value.trim()) {
+            setFieldError('patient-last-name', 'Введите фамилию пациента');
+            namesOk = false;
+        } else {
+            lnameInput.classList.remove('invalid');
+            document.getElementById('patient-last-name-error').textContent = '';
+        }
+
+        if (!validateForm() || !namesOk) {
+            return;
+        }
+
+        const genderInput = document.querySelector('input[name="gender"]:checked');
+        const selectedGender = genderInput ? genderInput.value : 'male';
+        const age = document.getElementById('user-age').value;
+        const weight = document.getElementById('user-weight').value;
+        const height = document.getElementById('user-height').value;
+        const patient_first_name = fnameInput.value.trim();
+        const patient_last_name = lnameInput.value.trim();
+        const analysisType = 'premium'; // Hardcoded for specialists
+
+        const draftDataToCache = { age, weight, height, gender: selectedGender, analysis_type: analysisType, patient_first_name, patient_last_name };
+        try {
+            sessionStorage.setItem('posture_app_analysis', JSON.stringify(draftDataToCache));
+        } catch (e) { }
+
+        const toCameraBtn = document.getElementById('to-camera-btn-specialist');
+        toCameraBtn.textContent = 'СОХРАНЕНИЕ...';
+        toCameraBtn.disabled = true;
+
+        try {
+            const draftRes = await fetch('form/save_draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: state.sessionId,
+                    token: sessionStorage.getItem('posture_app_token') || state.token,
+                    user_data: draftDataToCache
+                })
+            });
+            const draftData = await draftRes.json();
+            if (draftData.status === 'success' && draftData.analysis_id) {
+                state.analysisId = draftData.analysis_id;
+            }
+        } catch (err) {
+            console.warn('[app] save_draft failed', err);
+        }
+
+        toCameraBtn.textContent = 'НАЧАТЬ';
+        toCameraBtn.disabled = false;
+
+        state.currentStep = 0;
+        state.finalPhotos = [];
+        resetCaptureFlow();
+
+        const stepIndicator = document.getElementById('step-indicator');
+        if (stepIndicator) stepIndicator.innerText = stepLabels[state.currentStep];
+
+        document.getElementById('form-screen').style.display = 'none';
+        document.getElementById('camera-screen').style.display = 'block';
+
+        try {
+            await startCamera();
+        } catch (err) {
+            console.warn('[camera] startCamera failed', err);
+            document.getElementById('camera-screen').style.display = 'none';
+            document.getElementById('form-screen').style.display = 'flex';
+        }
     });
 
     // Helper

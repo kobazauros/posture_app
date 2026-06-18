@@ -162,8 +162,99 @@
         </div>
     </div>
 
+    <!-- CLIENT FORM SCREEN -->
+    <div id="form-screen" class="screen" style="display:none; background: var(--bg-main);">
+        <div class="form-container">
+            <h2>Анализ осанки</h2>
+            <div class="input-group">
+                <input type="text" id="patient-first-name" placeholder="Имя" required>
+                <div class="field-error" id="patient-first-name-error" aria-live="polite"></div>
+
+                <input type="text" id="patient-last-name" placeholder="Фамилия" required>
+                <div class="field-error" id="patient-last-name-error" aria-live="polite"></div>
+
+                <input type="number" id="user-age" placeholder="Возраст" inputmode="numeric" min="1" max="120" required>
+                <div class="field-error" id="age-error" aria-live="polite"></div>
+
+                <input type="number" id="user-weight" placeholder="Вес (кг)" inputmode="numeric" min="20" max="300"
+                    required>
+                <div class="field-error" id="weight-error" aria-live="polite"></div>
+
+                <input type="number" id="user-height" placeholder="Рост (см)" inputmode="numeric" min="50" max="250"
+                    required>
+                <div class="field-error" id="height-error" aria-live="polite"></div>
+
+                <div class="gender-toggle">
+                    <input type="radio" id="gender-male" name="gender" value="male" checked>
+                    <label for="gender-male">Муж.</label>
+
+                    <input type="radio" id="gender-female" name="gender" value="female">
+                    <label for="gender-female">Жен.</label>
+                </div>
+            </div>
+
+            <button id="to-camera-btn-specialist" class="action-btn primary-btn"
+                style="margin-top: 20px; width: 100%;">НАЧАТЬ</button>
+            <button id="cancel-client-btn" class="action-btn secondary-btn"
+                style="margin-top: 10px; width: 100%; border-style: none;">Отмена</button>
+        </div>
+    </div>
+
+    <!-- CAMERA SCREEN -->
+    <div id="camera-screen" style="display:none;">
+        <video id="camera-feed" autoplay playsinline muted></video>
+        <div id="step-indicator">Шаг 1: Вид спереди</div>
+
+        <div id="hud-container">
+            <canvas id="detector-canvas"></canvas>
+            <div class="guide-head"></div>
+            <div class="spine-guide"></div>
+            <div id="moving-horizon"></div>
+            <div class="guide-feet"></div>
+        </div>
+
+        <div id="figure-status"></div>
+        <div id="status">Выровняйте телефон</div>
+
+        <div id="controls-bar">
+            <div style="position: relative; display: flex; justify-content: center; align-items: center;">
+                <div id="timer-badge"></div>
+                <button id="timer-btn" class="side-btn"></button>
+            </div>
+            <div id="capture-area">
+                <div id="zoom-indicator">Зум 1.0x</div>
+                <button id="capture-btn" disabled></button>
+            </div>
+            <button id="switch-cam-btn" class="side-btn"></button>
+        </div>
+    </div>
+
+    <!-- PREVIEW SCREEN -->
+    <div id="preview-screen" style="display: none;">
+        <img id="preview-image">
+        <div class="preview-controls">
+            <button id="retake-btn" class="action-btn secondary-btn">Переснять</button>
+            <button id="next-step-btn" class="action-btn primary-btn">Дальше</button>
+        </div>
+    </div>
+
+    <!-- SENDING SCREEN -->
+    <div id="sending-screen" style="display: none;">
+        <div class="sending-card">
+            <h2 id="sending-title" style="text-align: center;">Фотографии отправлены на анализ</h2>
+            <p id="sending-message">
+                Снимки переданы в систему анализа для оценки Вашей осанки.
+                Рекомендуемый список упражнений, утвержденный специалистом,
+                будет возвращён Вам с помощью бота. Пожалуйта, ожидайте ответ в боте.
+            </p>
+            <button id="ok-btn" class="action-btn primary-btn" style="display:none;">OK</button>
+        </div>
+    </div>
+
+    <canvas id="capture-canvas" style="display:none;"></canvas>
+
     <!-- Scripts -->
-    <script src="specialist_dashboard.js?v=9"></script>
+    <script type="module" src="specialist_dashboard.js?v=11"></script>
 </body>
 
 </html>

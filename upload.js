@@ -188,6 +188,8 @@ export function sendPhotosToServer() {
                 weight: document.getElementById('user-weight').value,
                 height: document.getElementById('user-height').value,
                 gender: selectedGender,
+                patient_first_name: document.getElementById('patient-first-name') ? document.getElementById('patient-first-name').value : undefined,
+                patient_last_name: document.getElementById('patient-last-name') ? document.getElementById('patient-last-name').value : undefined
             },
             images: state.finalPhotos,
             orientations: state.finalOrientations,
@@ -222,6 +224,10 @@ export function sendPhotosToServer() {
             try {
                 sessionStorage.removeItem(SESSION_STORAGE_KEY);
                 sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+                // Clear prefill data ONLY for specialists since they add different clients
+                if (state.role === 'specialist-approved') {
+                    sessionStorage.removeItem('posture_app_analysis');
+                }
             } catch (err) {
                 // ignore
             }

@@ -154,7 +154,7 @@ def get_latest_posture_analysis(author_id):
     finally:
         conn.close()
 
-def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='basic'):
+def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='basic', patient_first_name=None, patient_last_name=None):
     """
     Creates or updates a draft analysis for the user.
     If the latest analysis is a draft, it updates it. Otherwise, creates a new one.
@@ -182,11 +182,11 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
                 cur.execute(
                     """
                     UPDATE posture_analyses 
-                    SET age = %s, weight = %s, height = %s, gender = %s, analysis_type = %s, created_at = CURRENT_TIMESTAMP
+                    SET age = %s, weight = %s, height = %s, gender = %s, analysis_type = %s, patient_first_name = %s, patient_last_name = %s, created_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                     RETURNING id
                     """,
-                    (age, weight, height, gender, analysis_type, latest['id'])
+                    (age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, latest['id'])
                 )
                 res = cur.fetchone()
                 analysis_id = dict(res)['id'] if res else None
@@ -194,11 +194,11 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
                 # Insert new draft
                 cur.execute(
                     """
-                    INSERT INTO posture_analyses (author_id, age, weight, height, gender, analysis_type, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, 'draft')
+                    INSERT INTO posture_analyses (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft')
                     RETURNING id
                     """,
-                    (author_id, age, weight, height, gender, analysis_type)
+                    (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
                 )
                 res = cur.fetchone()
                 analysis_id = dict(res)['id'] if res else None
@@ -377,7 +377,10 @@ def get_premium_pool(limit=20, offset=0):
                        (SELECT COUNT(*) FROM public.posture_analyses prev WHERE prev.author_id = pa.author_id) as previous_count
                 FROM public.posture_analyses pa
                 LEFT JOIN public.users u ON pa.author_id = u.telegram_id::bigint
-                WHERE pa.analysis_type = 'premium' AND pa.specialist_id IS NULL AND pa.status != 'draft'
+                WHERE pa.analysis_type = 'premium' 
+                  AND pa.specialist_id IS NULL 
+                  AND pa.status != 'draft'
+                  AND u.role != 'specialist-approved'
                 ORDER BY pa.created_at DESC
                 LIMIT %s OFFSET %s
                 """,

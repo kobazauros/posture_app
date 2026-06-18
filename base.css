@@ -111,10 +111,6 @@ h2 {
 
 /* Light theme overrides (для базовых элементов) */
 @media (prefers-color-scheme: light) {
-    h2 {
-        color: var(--text-primary) !important;
-    }
-
     body,
     .screen {
         background-color: var(--bg-main) !important;
@@ -136,7 +132,8 @@ h2 {
 }
 
 .error-desc {
-    color: var(--text-secondary);
+    color: var(--text-primary);
+    opacity: 0.7;
     line-height: 1.5;
     margin-top: 15px;
 }

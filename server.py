@@ -121,8 +121,10 @@ def save_draft():
     height = user_data.get('height')
     gender = user_data.get('gender')
     analysis_type = user_data.get('analysis_type', 'basic')
+    patient_first_name = user_data.get('patient_first_name')
+    patient_last_name = user_data.get('patient_last_name')
     
-    analysis_id = save_draft_analysis(uid, age, weight, height, gender, analysis_type)
+    analysis_id = save_draft_analysis(uid, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
     if analysis_id is not None:
         return jsonify({'status': 'success', 'analysis_id': analysis_id})
     else:
@@ -362,7 +364,7 @@ def api_specialist_clients():
     limit = int(request.args.get('limit', 20))
     offset = int(request.args.get('offset', 0))
     
-    specialist_id = user['id']
+    specialist_id = user['telegram_id']
     clients = database.search_specialist_clients(specialist_id, query, limit, offset)
     return jsonify({'clients': clients})
 
@@ -384,7 +386,7 @@ def api_assign_analysis(analysis_id):
     if not user or user.get('role') not in ['specialist-approved']:
         return jsonify({'error': 'Unauthorized'}), 401
         
-    success = database.assign_analysis(analysis_id, user['id'])
+    success = database.assign_analysis(analysis_id, user['telegram_id'])
     if success:
         return jsonify({'success': True})
     return jsonify({'error': 'Failed to assign analysis'}), 500

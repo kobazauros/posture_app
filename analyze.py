@@ -175,10 +175,11 @@ def _coerce_recommendations(payload: Mapping[str, Any], allowed_names: Sequence[
         cleaned_recommendations.append({"name": canonical_name, "reason": reason})
         seen_names.add(canonical_name)
 
+    if not cleaned_recommendations:
+        raise ValueError("Model failed to provide any valid exercises from the reference list")
+
     if len(cleaned_recommendations) != 5:
-        raise ValueError(
-            f"Expected 5 valid exercises from model, got {len(cleaned_recommendations)}"
-        )
+        print(f"Warning: Expected 5 valid exercises from model, got {len(cleaned_recommendations)}")
 
     result = dict(payload)
     result["recommended_exercises"] = cleaned_recommendations

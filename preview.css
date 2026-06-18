@@ -81,7 +81,6 @@
 }
 
 .error-desc {
-    color: #ccc;
     font-weight: 500 !important;
     text-align: center !important;
     margin-bottom: 30px !important;
@@ -102,9 +101,5 @@
         background: var(--bg-panel) !important;
         color: var(--text-primary) !important;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    .error-desc {
-        color: var(--border-main) !important;
     }
 }
