@@ -139,6 +139,8 @@ def upload():
         logger.warning('Upload request received without JSON body')
         return jsonify({'status': 'error', 'message': 'No data'}), 400
 
+    logger.info("UPLOAD DATA: session_id=%s, client_id=%s, token=%s", data.get('session_id'), data.get('client_id'), data.get('token'))
+
     session_id = data.get('session_id')
     client_id = data.get('client_id')
     token = data.get('token')

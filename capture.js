@@ -1,7 +1,7 @@
-import { state, stepLabels } from './state.js?v=13';
-import { sendPhotosToServer } from './upload.js?v=13';
-import { getFigureStatus } from './detector.js?v=13';
-import { bindTimerButton, handleCaptureWithTimer } from './timer.js?v=13';
+import { state, stepLabels } from './state.js';
+import { sendPhotosToServer } from './upload.js';
+import { getFigureStatus } from './detector.js';
+import { bindTimerButton, handleCaptureWithTimer } from './timer.js';
 /**
  * Updates the visible step label for the capture flow.
  * @returns {void}
