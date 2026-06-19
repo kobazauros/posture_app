@@ -4,7 +4,7 @@
 <head>
     <meta name="theme-color" content="#000000">
     <meta name="color-scheme" content="dark">
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="stylesheet" href="style.css?v=22">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -182,8 +182,9 @@
                 <label for="role-doctor">Специалист</label>
             </div>
             <!-- Используем те же стили (inline), что и у главной кнопки НАЧАТЬ -->
-            <button id="submit-onboarding-btn"
-                style="width: 100%; padding: 18px; background: #34C759; color: #fff; border: none; border-radius: 14px; font-weight: bold; font-size: 17px; margin-top: 20px;">ПРОДОЛЖИТЬ</button>
+            <button id="submit-onboarding-btn" style="margin-top: 20px;"> ПРОДОЛЖИТЬ </button>
+            <!--style="width: 100%; padding: 18px; background: #34C759; color: #fff; border: none; border-radius:
+                    14px; font-weight: bold; font-size: 17px; margin-top: 20px;">-->
         </div>
     </div>
     <!-- Экран статуса верификации специалиста -->
@@ -266,15 +267,6 @@
     <div id="camera-screen" style="display:none;">
         <video id="camera-feed" autoplay playsinline muted></video>
         <div id="step-indicator">Шаг 1: Вид спереди</div>
-        <!--
-        <div id="debug-landmarks" style="position:absolute;top:44px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:100;pointer-events:none;">
-            <span id="dbg-nose" style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.55);color:#fff;">👃—</span>
-            <span id="dbg-leye" style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.55);color:#fff;">👁L—</span>
-            <span id="dbg-reye" style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.55);color:#fff;">👁R—</span>
-            <span id="dbg-lear" style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.55);color:#fff;">👂L—</span>
-            <span id="dbg-rear" style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.55);color:#fff;">👂R—</span>
-        </div>
-        -->
         <div id="hud-container">
             <canvas id="detector-canvas"></canvas>
             <div class="guide-head"></div>
@@ -330,7 +322,7 @@
 
     <!-- Visual debug removed -->
 
-    <script type="module" src="app.js?v=21"></script>
+    <script type="module" src="app.js?v=22"></script>
 </body>
 
 </html>

@@ -123,7 +123,7 @@ async function routeUser() {
 
         setTimeout(() => {
             if (authData.role === 'specialist-approved') {
-                window.location.replace('specialist');
+                window.location.replace('specialist?v=' + Date.now());
                 return;
             }
 

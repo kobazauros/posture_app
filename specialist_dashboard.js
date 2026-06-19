@@ -334,14 +334,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = 'plan-card';
             div.style.marginBottom = '10px';
+            div.style.cursor = 'pointer';
+            div.onclick = () => openCorrection(histItem.id);
             div.innerHTML = `
-                <div class="client-header">
-                    <strong>Анализ #${historyList.length - index}</strong>
-                    <span class="client-date">${dateStr}</span>
-                </div>
-                <div style="margin-top: 10px;">${statusHtml}</div>
-                <div style="margin-top: 10px;">
-                    <button class="primary-btn action-btn" style="height: 36px; font-size: 14px;" onclick="openCorrection(${histItem.id})">СМОТРЕТЬ</button>
+                <div class="card-content-wrapper" style="width: 100%;">
+                    <div class="client-header" style="margin-bottom: 8px;">
+                        <h3 class="plan-title" style="margin: 0;">Анализ #${historyList.length - index}</h3>
+                        ${statusHtml}
+                    </div>
+                    <div class="client-date" style="color: var(--text-secondary); font-size: 13px;">Дата: ${dateStr}</div>
                 </div>
             `;
             listEl.appendChild(div);
@@ -380,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.openCorrection = (id) => {
-        document.getElementById('dashboard-screen').style.display = 'none';
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
         document.getElementById('stub-screen').style.display = 'flex';
     };
 

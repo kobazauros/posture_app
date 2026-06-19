@@ -187,9 +187,9 @@
     </div>
 
     <!-- PROFILE MODAL (History) -->
-    <div id="profile-screen" class="screen" style="display:none; flex-direction: column;">
+    <div id="profile-screen" class="screen" style="display:none; flex-direction: column; overflow-y: hidden;">
         <div class="form-container"
-            style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; width: 100%; align-self: stretch;">
+            style="height: 100%; width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-self: stretch;">
 
             <div class="profile-header"
                 style="position: relative; display: flex; align-items: flex-start; min-height: 48px; margin-bottom: 20px;">
@@ -206,7 +206,7 @@
                     onclick="createNewAnalysisForClient()" style="width: 100%; margin-bottom: 10px;">+ НОВЫЙ
                     АНАЛИЗ</button>
                 <button class="secondary-btn action-btn" onclick="closeProfileScreen()"
-                    style="width: 100%; border-style: none;">НАЗАД</button>
+                    style="width: 100%; border-style: none;">Отмена</button>
             </div>
         </div>
     </div>
