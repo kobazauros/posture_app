@@ -92,39 +92,57 @@ export function showSendingState(stateName, payload = {}) {
     if (stateName === 'final') {
         clearAutoRedirect();
 
-        if (title) title.textContent = 'Фотографии отправлены на анализ';
+        // Detect specialist context
+        const currentRole = state.role || sessionStorage.getItem('posture_app_role');
+        const isSpecialist = currentRole === 'specialist-approved';
+
+        if (title) title.textContent = isSpecialist
+            ? 'Анализ сохранён'
+            : 'Фотографии отправлены на анализ';
         if (message) {
-            message.textContent = 'Снимки переданы в систему анализа для оценки Вашей осанки. Рекомендуемый список упражнений будет подготовлен специалистом и отправлен Вам через бот.';
+            message.textContent = isSpecialist
+                ? 'Данные клиента и фотографии сохранены. Результаты ИИ-анализа будут доступны в карточке клиента.'
+                : 'Снимки переданы в систему анализа для оценки Вашей осанки. Рекомендуемый список упражнений будет подготовлен специалистом и отправлен Вам через бот.';
         }
 
         if (okBtn) {
             okBtn.style.display = 'block';
-            okBtn.textContent = 'OK';
+            okBtn.textContent = isSpecialist ? 'ВЕРНУТЬСЯ В КАБИНЕТ' : 'OK';
             okBtn.onclick = () => {
                 clearAutoRedirect();
-                closeOrRedirect();
+                if (isSpecialist) {
+                    // Return to specialist dashboard instead of redirecting to Telegram
+                    document.getElementById('sending-screen').style.display = 'none';
+                    document.getElementById('dashboard-screen').style.display = 'flex';
+                    window.scrollTo(0, 0);
+                } else {
+                    closeOrRedirect();
+                }
             };
         }
 
-        const countdownEl = document.getElementById('sending-countdown');
-        let seconds = 5;
-        if (countdownEl) {
-            countdownEl.style.display = 'block';
-            countdownEl.textContent = `Вы будете перенаправлены в бот через ${seconds} сек.`;
-            state.redirectInterval = setInterval(() => {
-                seconds -= 1;
-                if (seconds <= 0) {
-                    countdownEl.textContent = 'Перенаправление...';
-                    clearAutoRedirect();
-                } else {
-                    countdownEl.textContent = `Вы будете перенаправлены в бот через ${seconds} сек.`;
-                }
-            }, 1000);
-        }
+        // Auto-redirect only for non-specialist users
+        if (!isSpecialist) {
+            const countdownEl = document.getElementById('sending-countdown');
+            let seconds = 5;
+            if (countdownEl) {
+                countdownEl.style.display = 'block';
+                countdownEl.textContent = `Вы будете перенаправлены в бот через ${seconds} сек.`;
+                state.redirectInterval = setInterval(() => {
+                    seconds -= 1;
+                    if (seconds <= 0) {
+                        countdownEl.textContent = 'Перенаправление...';
+                        clearAutoRedirect();
+                    } else {
+                        countdownEl.textContent = `Вы будете перенаправлены в бот через ${seconds} сек.`;
+                    }
+                }, 1000);
+            }
 
-        state.redirectTimer = setTimeout(() => {
-            closeOrRedirect();
-        }, 5000);
+            state.redirectTimer = setTimeout(() => {
+                closeOrRedirect();
+            }, 5000);
+        }
         return;
     }
 
@@ -207,32 +225,48 @@ export function sendPhotosToServer() {
 
             // Close session immediately after the server accepted the upload.
             // This is the actual lifecycle boundary for the capture session.
-            try {
-                const closeResponse = await fetch('session/close', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: state.sessionId, client_id: state.clientId }),
-                });
-                const closePayload = await closeResponse.json().catch(() => ({}));
-                if (!closeResponse.ok || closePayload.status !== 'success') {
-                    console.warn('[session] close after upload failed', closeResponse.status, closePayload);
+            // IMPORTANT: Specialists work in persistent multi-analysis sessions,
+            // so we must NOT close their server-side session or null their sessionId.
+            const currentRole = state.role || sessionStorage.getItem('posture_app_role');
+            const isSpecialist = currentRole === 'specialist-approved';
+
+            if (!isSpecialist) {
+                try {
+                    const closeResponse = await fetch('session/close', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: state.sessionId, client_id: state.clientId }),
+                    });
+                    const closePayload = await closeResponse.json().catch(() => ({}));
+                    if (!closeResponse.ok || closePayload.status !== 'success') {
+                        console.warn('[session] close after upload failed', closeResponse.status, closePayload);
+                    }
+                } catch (err) {
+                    console.warn('[session] close after upload request failed', err);
                 }
-            } catch (err) {
-                console.warn('[session] close after upload request failed', err);
             }
 
             try {
-                sessionStorage.removeItem(SESSION_STORAGE_KEY);
-                sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-                // Clear prefill data ONLY for specialists since they add different clients
-                if (state.role === 'specialist-approved') {
+                if (!isSpecialist) {
+                    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+                    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+                } else {
+                    // For specialists, only remove the token (one-time-use), keep the session.
+                    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+                    // Clear prefill data so the next client starts with a blank form.
                     sessionStorage.removeItem('posture_app_analysis');
                 }
             } catch (err) {
                 // ignore
             }
-            state.sessionId = null;
-            state.token = null;
+
+            if (!isSpecialist) {
+                state.sessionId = null;
+                state.token = null;
+            } else {
+                // Keep state.sessionId alive; only clear the one-time token.
+                state.token = null;
+            }
 
             // Post a debug log noting upload was sent and server accepted
             try {

@@ -1,5 +1,5 @@
 import { state, stepLabels } from './state.js?v=21';
-import { sendPhotosToServer } from './upload.js?v=21';
+import { sendPhotosToServer } from './upload.js?v=22';
 import { getFigureStatus } from './detector.js?v=21';
 import { bindTimerButton, handleCaptureWithTimer } from './timer.js?v=21';
 /**

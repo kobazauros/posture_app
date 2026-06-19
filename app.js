@@ -4,10 +4,10 @@
 import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=21';
 import { attachFormValidation, validateForm } from './form.js?v=21';
 import { startCamera, switchCameraFacing } from './camera.js?v=21';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=21';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=22';
 import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=21';
 import { initDetector } from './detector.js?v=21';
-import { closeOrRedirect } from './upload.js?v=21';
+import { closeOrRedirect } from './upload.js?v=22';
 
 
 bootstrapAuthFromUrl();

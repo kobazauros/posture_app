@@ -1,6 +1,6 @@
 import { attachFormValidation, validateForm, setFieldError } from './form.js?v=21';
 import { startCamera, switchCameraFacing } from './camera.js?v=21';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=21';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=22';
 import { state, stepLabels } from './state.js?v=21';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -355,6 +355,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = window.currentProfileClient;
         if (!item) return;
 
+        // Always read a fresh sessionId — the closure value may be stale
+        // if the specialist has already completed a previous analysis.
+        const freshSessionId = sessionStorage.getItem('posture_app_session_id') || sessionId;
+        state.sessionId = freshSessionId;
+        state.analysisId = null; // Reset so a new draft is created for this analysis
+
         document.getElementById('patient-first-name').value = item.patient_first_name || '';
         document.getElementById('patient-last-name').value = item.patient_last_name || '';
         if (item.age) document.getElementById('user-age').value = item.age;
@@ -370,8 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bindCaptureHandlers();
         updateStepIndicator();
 
-        // Ensure state is set for specialist flow
-        state.sessionId = sessionId;
         state.maxSteps = 4; // Force 4 photos
 
         document.getElementById('profile-screen').style.display = 'none';
@@ -413,8 +417,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-height').value = '';
         document.getElementById('gender-male').checked = true;
 
-        // Ensure state is set for specialist flow
-        state.sessionId = sessionId;
+        // Always use the current sessionId — the closure may be stale after a previous upload cleared it.
+        state.sessionId = sessionStorage.getItem('posture_app_session_id') || sessionId;
+        state.analysisId = null; // Reset so a new draft is created for this client
         state.maxSteps = 4; // Force 4 photos
     });
 
@@ -477,7 +482,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    session_id: state.sessionId,
+                    // Re-read from sessionStorage at send time so we always use the live session,
+                    // not a stale closure value that may have been cleared by a previous upload.
+                    session_id: state.sessionId || sessionStorage.getItem('posture_app_session_id'),
                     token: sessionStorage.getItem('posture_app_token') || state.token,
                     user_data: draftDataToCache
                 })
