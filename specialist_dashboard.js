@@ -370,6 +370,10 @@ document.addEventListener('DOMContentLoaded', () => {
         bindCaptureHandlers();
         updateStepIndicator();
 
+        // Ensure state is set for specialist flow
+        state.sessionId = sessionId;
+        state.maxSteps = 4; // Force 4 photos
+
         document.getElementById('profile-screen').style.display = 'none';
         document.getElementById('form-screen').style.display = 'flex';
     };
