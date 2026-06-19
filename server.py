@@ -124,6 +124,8 @@ def save_draft():
     patient_first_name = user_data.get('patient_first_name')
     patient_last_name = user_data.get('patient_last_name')
     
+    logger.info(f"save_draft payload for {uid}: age={age}, weight={weight}, height={height}, gender={gender}")
+    
     try:
         analysis_id = save_draft_analysis(uid, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
         if analysis_id is not None:

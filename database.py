@@ -143,7 +143,7 @@ def get_latest_posture_analysis(author_id):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT * FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC LIMIT 1",
+                "SELECT * FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC, id DESC LIMIT 1",
                 (author_id,)
             )
             analysis = cur.fetchone()
@@ -171,13 +171,16 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
         with conn.cursor() as cur:
             # Check the latest analysis
             cur.execute(
-                "SELECT id, status FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC LIMIT 1",
+                "SELECT id, status FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC, id DESC LIMIT 1",
                 (author_id,)
             )
             latest_row = cur.fetchone()
             latest = dict(latest_row) if latest_row else None
             
-            if latest and latest.get('status') == 'draft':
+            logger.info(f"save_draft_analysis for author={author_id}: latest_row={latest}")
+            
+            if latest and latest.get('status', '').strip() == 'draft':
+                logger.info(f"save_draft_analysis: Updating existing draft {latest['id']}")
                 # Update existing draft
                 cur.execute(
                     """
@@ -191,11 +194,12 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
                 res = cur.fetchone()
                 analysis_id = dict(res)['id'] if res else None
             else:
+                logger.info(f"save_draft_analysis: Inserting NEW draft (status was not draft or latest was None)")
                 # Insert new draft
                 cur.execute(
                     """
-                    INSERT INTO posture_analyses (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft')
+                    INSERT INTO posture_analyses (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, status, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft', CURRENT_TIMESTAMP)
                     RETURNING id
                     """,
                     (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
