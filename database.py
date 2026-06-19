@@ -143,7 +143,7 @@ def get_latest_posture_analysis(author_id):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT * FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC, id DESC LIMIT 1",
+                "SELECT * FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC NULLS LAST, id DESC LIMIT 1",
                 (author_id,)
             )
             analysis = cur.fetchone()
@@ -171,7 +171,7 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
         with conn.cursor() as cur:
             # Check the latest analysis
             cur.execute(
-                "SELECT id, status FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC, id DESC LIMIT 1",
+                "SELECT id, status FROM posture_analyses WHERE author_id = %s ORDER BY created_at DESC NULLS LAST, id DESC LIMIT 1",
                 (author_id,)
             )
             latest_row = cur.fetchone()
