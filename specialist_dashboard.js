@@ -1,7 +1,7 @@
-import { attachFormValidation, validateForm, setFieldError } from './form.js';
-import { startCamera, switchCameraFacing } from './camera.js';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js';
-import { state, stepLabels } from './state.js';
+import { attachFormValidation, validateForm, setFieldError } from './form.js?v=20';
+import { startCamera, switchCameraFacing } from './camera.js?v=20';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=20';
+import { state, stepLabels } from './state.js?v=20';
 
 document.addEventListener('DOMContentLoaded', () => {
     const sessionId = sessionStorage.getItem('posture_app_session_id');
