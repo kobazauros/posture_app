@@ -1,13 +1,13 @@
 /**
  * Application bootstrap that wires together auth, form, camera, and capture modules.
  */
-import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=20';
-import { attachFormValidation, validateForm } from './form.js?v=20';
-import { startCamera, switchCameraFacing } from './camera.js?v=20';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=20';
-import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=20';
-import { initDetector } from './detector.js?v=20';
-import { closeOrRedirect } from './upload.js?v=20';
+import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=21';
+import { attachFormValidation, validateForm } from './form.js?v=21';
+import { startCamera, switchCameraFacing } from './camera.js?v=21';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=21';
+import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=21';
+import { initDetector } from './detector.js?v=21';
+import { closeOrRedirect } from './upload.js?v=21';
 
 
 bootstrapAuthFromUrl();
@@ -323,8 +323,12 @@ async function handleToCameraClick() {
             try {
                 sessionStorage.setItem('posture_app_analysis', JSON.stringify(state.latestAnalysis));
             } catch (e) { }
+        } else {
+            alert('Ошибка при сохранении черновика: ' + (draftData.message || 'Неизвестная ошибка'));
+            console.warn('[app] save_draft error response', draftData);
         }
     } catch (err) {
+        alert('Ошибка сети при сохранении черновика. Новые данные могут быть не сохранены.');
         console.warn('[app] save_draft failed', err);
     }
 

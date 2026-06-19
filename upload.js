@@ -1,5 +1,5 @@
-import { TELEGRAM_BOT_USERNAME, TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY, state } from './state.js?v=20';
-import { stopCamera } from './camera.js?v=20';
+import { TELEGRAM_BOT_USERNAME, TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY, state } from './state.js?v=21';
+import { stopCamera } from './camera.js?v=21';
 
 /**
  * Clears the auto-redirect timer and countdown state.
@@ -178,8 +178,8 @@ export function sendPhotosToServer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            session_id: state.sessionId,
-            client_id: state.clientId,
+            session_id: state.sessionId || sessionStorage.getItem(SESSION_STORAGE_KEY),
+            client_id: state.clientId || localStorage.getItem('posture_app_client_id'),
             token: sessionStorage.getItem(TOKEN_STORAGE_KEY) || state.token,
             user_id: state.userId,
             analysis_id: state.analysisId,

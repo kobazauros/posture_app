@@ -208,7 +208,7 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
     except Exception as e:
         logger.error(f"Error saving draft analysis for {author_id}: {e}")
         conn.rollback()
-        return None
+        raise e
     finally:
         conn.close()
 

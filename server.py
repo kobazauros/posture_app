@@ -124,11 +124,14 @@ def save_draft():
     patient_first_name = user_data.get('patient_first_name')
     patient_last_name = user_data.get('patient_last_name')
     
-    analysis_id = save_draft_analysis(uid, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
-    if analysis_id is not None:
-        return jsonify({'status': 'success', 'analysis_id': analysis_id})
-    else:
-        return jsonify({'status': 'error', 'message': 'Failed to save draft'}), 500
+    try:
+        analysis_id = save_draft_analysis(uid, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
+        if analysis_id is not None:
+            return jsonify({'status': 'success', 'analysis_id': analysis_id})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to save draft: returned None'}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Failed to save draft: {e}'}), 500
 
 # ПРИЕМНИК: АНКЕТА + ФОТО
 @app.route('/upload', methods=['POST'])

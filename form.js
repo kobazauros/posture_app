@@ -1,4 +1,4 @@
-import { FORM_LIMITS } from './state.js?v=20';
+import { FORM_LIMITS } from './state.js?v=21';
 
 /**
  * Returns the validation error element id for a form field.
