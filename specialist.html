@@ -8,13 +8,118 @@
     <link rel="stylesheet" href="style.css?v=9">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .dashboard-header {
+        /* ── Экраны кабинета специалиста ─────────────────────────── */
+
+        /* Боковые отступы для всех экранов кабинета */
+        .screen-padded {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        /* form-container растягивается на всю высоту экрана (flex-колонка) */
+        .dashboard-container {
+            max-width: 600px;
+            width: 100%;
+            /* перебивает width:90% из form.css */
+            margin: 0 auto;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            align-self: stretch;
+            flex: 1;
+            /* занимает всю доступную высоту родителя */
+            box-sizing: border-box;
+        }
+
+        /* Экран истории — явно задаём flex-column чтобы не зависеть от inline style */
+        #profile-screen {
+            flex-direction: column;
+        }
+
+        /* ── Шапка дашборда ──────────────────────────────────────── */
+
+        /* profile-header в режиме специалиста: относительное позиционирование,
+           выравнивание к верху (не центру как по умолчанию в form.css) */
+        .spec-profile-header {
+            position: relative;
+            align-items: flex-start;
+            min-height: 48px;
+        }
+
+        /* На экране истории шапка имеет дополнительный отступ снизу */
+        #profile-screen .spec-profile-header {
             margin-bottom: 20px;
         }
 
+        /* Строка аватар + имя */
+        .spec-avatar-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Фильтры пула (Новые / Повторные) */
+        #pool-filters {
+            display: none;
+            /* показывается через JS */
+            position: absolute;
+            right: 0;
+            top: 0;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+        }
+
+        /* Маленький chip в шапке фильтров */
+        .filter-chip-sm {
+            font-size: 12px;
+            padding: 4px 10px;
+        }
+
+        /* ── Переключатель вкладок (Мои клиенты / Новые заявки) ── */
+        .tab-toggle {
+            margin-bottom: 25px;
+            flex-shrink: 0;
+        }
+
+        /* ── Поле поиска ─────────────────────────────────────────── */
+        .search-group {
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        /* ── Прокручиваемый список клиентов ─────────────────────── */
+        .scrollable-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        /* ── Индикатор загрузки ──────────────────────────────────── */
+        .loading-indicator {
+            display: none;
+            /* показывается через JS */
+            text-align: center;
+            margin: 20px 0;
+            color: var(--text-secondary);
+        }
+
+        /* ── Блок кнопок внизу экрана ────────────────────────────── */
+        .bottom-actions {
+            flex-shrink: 0;
+            padding-top: 10px;
+        }
+
+        /* Кнопка на всю ширину */
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Кнопка добавить клиента (пунктирная рамка) */
+        #btn-add-client {
+            border-style: dashed;
+        }
+
+        /* ── Карточки клиентов ───────────────────────────────────── */
         .client-card {
             cursor: default;
         }
@@ -31,6 +136,18 @@
             font-size: 13px;
         }
 
+        .card-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-actions .action-btn {
+            height: 44px;
+            font-size: 15px;
+        }
+
+        /* ── Бейджи статусов ─────────────────────────────────────── */
         .status-badge {
             font-size: 11px;
             padding: 4px 8px;
@@ -63,6 +180,7 @@
             border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
+        /* Новая карточка из пула */
         .client-card-new {
             border-color: var(--color-green);
             box-shadow: 0 0 15px rgba(52, 199, 89, 0.1);
@@ -87,22 +205,31 @@
             }
         }
 
-        .card-actions {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
+        /* ── Бейдж «Новые заявки» в таб-переключателе ───────────── */
+        #pool-badge {
+            display: none;
+            /* показывается через JS */
+            background: var(--color-red);
         }
 
-        .card-actions .action-btn {
-            height: 44px;
-            font-size: 15px;
+        /* ── Экран Истории (profile-screen) ─────────────────────── */
+
+        /* Заголовок «История: Имя» */
+        .screen-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
         }
 
-        /* Stub screen styles */
+        /* ── Экран Корректировки (stub-screen) ───────────────────── */
         .stub-screen {
             display: none;
             text-align: center;
             padding: 40px 20px;
+        }
+
+        .stub-screen .form-container {
+            max-width: 600px;
         }
 
         .stub-icon {
@@ -110,19 +237,38 @@
             margin-bottom: 20px;
             color: var(--text-secondary);
         }
+
+        .stub-desc {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        /* ── Форма клиента (form-screen) ─────────────────────────── */
+        #to-camera-btn-specialist {
+            margin-top: 20px;
+        }
+
+        #cancel-client-btn {
+            margin-top: 10px;
+            border-style: none;
+        }
+
+        /* ── Экран отправки ──────────────────────────────────────── */
+        #sending-title {
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
 
     <!-- MAIN DASHBOARD -->
-    <div id="dashboard-screen" class="screen">
-        <div class="form-container"
-            style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; width: 100%; align-self: stretch;">
+    <div id="dashboard-screen" class="screen screen-padded">
+        <div class="form-container dashboard-container">
 
-            <div class="profile-header"
-                style="position: relative; display: flex; align-items: flex-start; min-height: 48px;">
-                <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="profile-header spec-profile-header">
+                <div class="spec-avatar-row">
                     <div class="profile-avatar" id="specialist-avatar">С</div>
                     <div class="profile-info">
                         <div class="profile-title">Специалист</div>
@@ -130,43 +276,35 @@
                     </div>
                 </div>
 
-                <div id="pool-filters"
-                    style="display: none; position: absolute; right: 0; top: 0; flex-direction: column; gap: 6px; align-items: flex-end;">
-                    <div class="filter-chip active" id="chip-filter-new" style="font-size: 12px; padding: 4px 10px;">
-                        Новые</div>
-                    <div class="filter-chip active" id="chip-filter-returning"
-                        style="font-size: 12px; padding: 4px 10px;">Повторные</div>
+                <div id="pool-filters">
+                    <div class="filter-chip filter-chip-sm active" id="chip-filter-new">Новые</div>
+                    <div class="filter-chip filter-chip-sm active" id="chip-filter-returning">Повторные</div>
                 </div>
             </div>
 
-            <div class="gender-toggle" style="margin-bottom: 25px; flex-shrink: 0;">
+            <div class="gender-toggle tab-toggle">
                 <input type="radio" id="tab-my" name="dashboard_tab" value="my_clients" checked>
                 <label for="tab-my">Мои клиенты</label>
 
                 <input type="radio" id="tab-pool" name="dashboard_tab" value="pool">
                 <label for="tab-pool">
-                    Новые заявки <span class="plan-badge" id="pool-badge"
-                        style="display:none; background:var(--color-red);">0</span>
+                    Новые заявки <span class="plan-badge" id="pool-badge">0</span>
                 </label>
             </div>
 
-            <div class="input-group" style="margin-bottom: 20px; flex-shrink: 0;">
+            <div class="input-group search-group">
                 <input type="text" id="search-client" class="input-field" placeholder="Поиск по клиентам...">
             </div>
 
             <!-- List container -->
-            <div class="plan-options" id="clients-list" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+            <div class="plan-options scrollable-list" id="clients-list">
                 <!-- Dynamically populated -->
             </div>
 
-            <div id="loading-indicator"
-                style="text-align: center; margin: 20px 0; color: var(--text-secondary); display: none;">
-                Загрузка...
-            </div>
+            <div class="loading-indicator" id="loading-indicator">Загрузка...</div>
 
-            <div style="flex-shrink: 0; padding-top: 10px;">
-                <button id="btn-add-client" class="secondary-btn action-btn"
-                    style="width: 100%; border-style: dashed;">+ ДОБАВИТЬ КЛИЕНТА</button>
+            <div class="bottom-actions">
+                <button id="btn-add-client" class="secondary-btn action-btn btn-full">+ ДОБАВИТЬ КЛИЕНТА</button>
             </div>
 
         </div>
@@ -174,45 +312,40 @@
 
     <!-- STUB SCREEN (Correction) -->
     <div id="stub-screen" class="screen stub-screen">
-        <div class="form-container" style="max-width: 600px;">
+        <div class="form-container">
             <div class="stub-icon">🛠️</div>
             <h2 class="form-title">Экран корректировки</h2>
-            <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 30px;">
+            <p class="stub-desc">
                 Данный экран находится в разработке. Здесь специалист сможет видеть фотографии пациента, рассчитанные ИИ
                 углы, и редактировать сгенерированный список упражнений перед отправкой финального PDF-отчета клиенту.
             </p>
-            <button class="primary-btn action-btn" onclick="closeStubScreen()" style="width: 100%;">ВЕРНУТЬСЯ В
-                КАБИНЕТ</button>
+            <button class="primary-btn action-btn btn-full" onclick="closeStubScreen()">ВЕРНУТЬСЯ В КАБИНЕТ</button>
         </div>
     </div>
 
     <!-- PROFILE MODAL (History) -->
-    <div id="profile-screen" class="screen" style="display:none; flex-direction: column; overflow-y: hidden;">
-        <div class="form-container"
-            style="flex: 1; width: 100%; margin: 0 auto; display: flex; flex-direction: column;">
+    <div id="profile-screen" class="screen screen-padded" style="display:none;">
+        <div class="form-container dashboard-container">
 
-            <div class="profile-header"
-                style="position: relative; display: flex; align-items: flex-start; min-height: 48px; margin-bottom: 20px;">
-                <h1 id="profile-name" style="font-size: 24px; font-weight: 700; margin: 0;">История</h1>
+            <div class="profile-header spec-profile-header">
+                <h1 id="profile-name" class="screen-title">История</h1>
             </div>
 
-            <div class="plan-options" id="profile-history-list"
-                style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+            <div class="plan-options scrollable-list" id="profile-history-list">
                 <!-- Dynamically populated -->
             </div>
 
-            <div style="flex-shrink: 0; padding-top: 10px; margin-top: auto;">
-                <button id="profile-new-analysis-btn" class="primary-btn action-btn"
-                    onclick="createNewAnalysisForClient()" style="width: 100%; margin-bottom: 10px;">+ НОВЫЙ
-                    АНАЛИЗ</button>
-                <button class="secondary-btn action-btn" onclick="closeProfileScreen()"
-                    style="width: 100%; border-style: none;">Отмена</button>
+            <div class="bottom-actions">
+                <button id="profile-new-analysis-btn" class="primary-btn action-btn btn-full"
+                    onclick="createNewAnalysisForClient()" style="margin-bottom: 10px;">+ НОВЫЙ АНАЛИЗ</button>
+                <button class="secondary-btn action-btn btn-full" onclick="closeProfileScreen()"
+                    style="border-style: none;">Отмена</button>
             </div>
         </div>
     </div>
 
     <!-- CLIENT FORM SCREEN -->
-    <div id="form-screen" class="screen" style="display:none; background: var(--bg-main);">
+    <div id="form-screen" class="screen screen-padded" style="display:none;">
         <div class="form-container">
             <h2>Анализ осанки</h2>
             <div class="input-group">
@@ -242,10 +375,8 @@
                 </div>
             </div>
 
-            <button id="to-camera-btn-specialist" class="action-btn primary-btn"
-                style="margin-top: 20px; width: 100%;">НАЧАТЬ</button>
-            <button id="cancel-client-btn" class="action-btn secondary-btn"
-                style="margin-top: 10px; width: 100%; border-style: none;">Отмена</button>
+            <button id="to-camera-btn-specialist" class="action-btn primary-btn btn-full">НАЧАТЬ</button>
+            <button id="cancel-client-btn" class="action-btn secondary-btn btn-full">Отмена</button>
         </div>
     </div>
 
@@ -290,7 +421,7 @@
     <!-- SENDING SCREEN -->
     <div id="sending-screen" style="display: none;">
         <div class="sending-card">
-            <h2 id="sending-title" style="text-align: center;">Фотографии отправлены на анализ</h2>
+            <h2 id="sending-title">Фотографии отправлены на анализ</h2>
             <p id="sending-message">
                 Снимки переданы в систему анализа для оценки Вашей осанки.
                 Рекомендуемый список упражнений, утвержденный специалистом,
@@ -303,7 +434,7 @@
     <canvas id="capture-canvas" style="display:none;"></canvas>
 
     <!-- Scripts -->
-    <script type="module" src="specialist_dashboard.js?v=11"></script>
+    <script type="module" src="specialist_dashboard.js?v=12"></script>
 </body>
 
 </html>

@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fullName = `${firstName} ${lastName}`.trim();
 
         document.getElementById('dashboard-screen').style.display = 'none';
-        document.getElementById('profile-screen').style.display = 'block';
+        document.getElementById('profile-screen').style.display = 'flex';
         document.getElementById('profile-name').textContent = `История: ${fullName}`;
 
         const specialistId = sessionStorage.getItem('posture_app_user_id');
