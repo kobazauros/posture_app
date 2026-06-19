@@ -91,6 +91,7 @@ export function bootstrapAuthFromUrl() {
         state.role = sessionStorage.getItem('posture_app_role');
         state.firstName = sessionStorage.getItem('posture_app_fname');
         state.lastName = sessionStorage.getItem('posture_app_lname');
+        state.userId = sessionStorage.getItem('posture_app_user_id');
         const cachedAnalysis = sessionStorage.getItem('posture_app_analysis');
         if (cachedAnalysis && cachedAnalysis !== 'undefined') {
             state.latestAnalysis = JSON.parse(cachedAnalysis);
@@ -174,6 +175,7 @@ export async function initializeAuthSession() {
                     sessionStorage.setItem('posture_app_role', state.role || '');
                     sessionStorage.setItem('posture_app_fname', state.firstName || '');
                     sessionStorage.setItem('posture_app_lname', state.lastName || '');
+                    sessionStorage.setItem('posture_app_user_id', payload.user_id || '');
                     sessionStorage.setItem('posture_app_analysis', JSON.stringify(state.latestAnalysis || null));
                 } catch (e) { }
 

@@ -208,8 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.className = 'plan-card client-card';
         if (isPool && !isReturning) {
-            div.style.borderColor = 'var(--color-green)';
-            div.style.boxShadow = '0 0 15px rgba(52, 199, 89, 0.1)';
+            div.classList.add('client-card-new');
         }
 
         let badgeHtml = '';
@@ -220,13 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let statusHtml = '';
         if (isPool) {
             if (isReturning) {
-                statusHtml = `<span class="status-badge status-waiting" style="background: rgba(0, 255, 255, 0.2); color: var(--color-cyan); border-color: rgba(0, 255, 255, 0.4);">Повторный</span>`;
+                statusHtml = `<span class="status-badge status-returning">Повторный</span>`;
             } else {
                 statusHtml = `<span class="status-badge status-waiting">Ожидает разбора</span>`;
             }
         } else {
             if (item.status === 'draft') {
-                statusHtml = `<span class="status-badge" style="background:rgba(255,255,255,0.1); color:var(--text-secondary);">Черновик</span>`;
+                statusHtml = `<span class="status-badge status-draft">Черновик</span>`;
             } else if (item.status === 'completed') {
                 statusHtml = `<span class="status-badge status-done">Завершено</span>`;
             } else {
@@ -237,14 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let actionsHtml = '';
         if (isPool) {
             actionsHtml = `<button class="primary-btn action-btn" onclick="takeToWork(${item.id})">ВЗЯТЬ В РАБОТУ</button>`;
-            if (isReturning) {
-                actionsHtml += `<button class="secondary-btn action-btn" style="flex: 0.5;" onclick="openProfile(${item.id}, '${fullName}')">ПРОФИЛЬ</button>`;
-            }
+            actionsHtml += `<button class="secondary-btn action-btn" style="flex: 0.5;" onclick="openProfile(${item.id})">ПРОФИЛЬ</button>`;
         } else {
             actionsHtml = `<button class="primary-btn action-btn" onclick="openCorrection(${item.id})">КОРРЕКТИРОВАТЬ</button>`;
-            if (isReturning) {
-                actionsHtml += `<button class="secondary-btn action-btn" style="flex: 0.5;" onclick="openProfile(${item.id}, '${fullName}')">ПРОФИЛЬ</button>`;
-            }
+            actionsHtml += `<button class="secondary-btn action-btn" style="flex: 0.5;" onclick="openProfile(${item.id})">ПРОФИЛЬ</button>`;
         }
 
         let descText = '';
@@ -299,17 +294,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.openProfile = (id, name) => {
+    window.openProfile = (id) => {
+        const item = (myClientsList || []).find(c => c.id === id) || (poolList || []).find(c => c.id === id);
+        if (!item) return;
+
+        const firstName = item.patient_first_name || item.tg_first_name || 'Неизвестно';
+        const lastName = item.patient_last_name || item.tg_last_name || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+
         document.getElementById('dashboard-screen').style.display = 'none';
         document.getElementById('profile-screen').style.display = 'block';
-        document.getElementById('profile-name').textContent = `История: ${name}`;
+        document.getElementById('profile-name').textContent = `История: ${fullName}`;
 
-        // In a real app we would fetch the history. For now we just show a stub list
-        document.getElementById('profile-history-list').innerHTML = `
-            <p style="color:var(--text-secondary); text-align:center;">
-                Здесь будет загружаться полный список прошлых анализов из БД...
-            </p>
-        `;
+        const specialistId = sessionStorage.getItem('posture_app_user_id');
+        const newAnalysisBtn = document.getElementById('profile-new-analysis-btn');
+        if (newAnalysisBtn) {
+            if (String(item.author_id) === String(specialistId)) {
+                newAnalysisBtn.style.display = 'block';
+            } else {
+                newAnalysisBtn.style.display = 'none';
+            }
+        }
+
+        const historyList = (myClientsList || []).filter(c =>
+            c.author_id === item.author_id &&
+            (c.patient_first_name || '') === (item.patient_first_name || '') &&
+            (c.patient_last_name || '') === (item.patient_last_name || '')
+        );
+
+        const listEl = document.getElementById('profile-history-list');
+        listEl.innerHTML = '';
+
+        historyList.forEach((histItem, index) => {
+            const dateStr = new Date(histItem.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const statusHtml = histItem.status === 'completed'
+                ? '<span class="status-badge status-done">Завершено</span>'
+                : '<span class="status-badge status-waiting">Требует анализа</span>';
+
+            const div = document.createElement('div');
+            div.className = 'plan-card';
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <div class="client-header">
+                    <strong>Анализ #${historyList.length - index}</strong>
+                    <span class="client-date">${dateStr}</span>
+                </div>
+                <div style="margin-top: 10px;">${statusHtml}</div>
+                <div style="margin-top: 10px;">
+                    <button class="primary-btn action-btn" style="height: 36px; font-size: 14px;" onclick="openCorrection(${histItem.id})">СМОТРЕТЬ</button>
+                </div>
+            `;
+            listEl.appendChild(div);
+        });
+
+        window.currentProfileClient = item;
+    };
+
+    window.createNewAnalysisForClient = () => {
+        const item = window.currentProfileClient;
+        if (!item) return;
+
+        document.getElementById('patient-first-name').value = item.patient_first_name || '';
+        document.getElementById('patient-last-name').value = item.patient_last_name || '';
+        if (item.age) document.getElementById('user-age').value = item.age;
+        if (item.weight) document.getElementById('user-weight').value = item.weight;
+        if (item.height) document.getElementById('user-height').value = item.height;
+        if (item.gender === 'male' || item.gender === 'female') {
+            const r = document.getElementById('gender-' + item.gender);
+            if (r) r.checked = true;
+        }
+
+        // Initialize logic for the capture flow
+        attachFormValidation();
+        bindCaptureHandlers();
+        updateStepIndicator();
+
+        document.getElementById('profile-screen').style.display = 'none';
+        document.getElementById('form-screen').style.display = 'flex';
     };
 
     window.closeProfileScreen = () => {
@@ -319,7 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.openCorrection = (id) => {
-        // Open Stub screen for correction
         document.getElementById('dashboard-screen').style.display = 'none';
         document.getElementById('stub-screen').style.display = 'flex';
     };
@@ -340,26 +400,13 @@ document.addEventListener('DOMContentLoaded', () => {
         bindCaptureHandlers();
         updateStepIndicator();
 
-        // Prefill form from cached analysis if available
-        const cachedAnalysis = sessionStorage.getItem('posture_app_analysis');
-        if (cachedAnalysis && cachedAnalysis !== 'undefined') {
-            try {
-                const latest = JSON.parse(cachedAnalysis);
-                if (latest.status === 'draft' || !latest.status) {
-                    if (latest.patient_first_name) document.getElementById('patient-first-name').value = latest.patient_first_name;
-                    if (latest.patient_last_name) document.getElementById('patient-last-name').value = latest.patient_last_name;
-                    if (latest.age) document.getElementById('user-age').value = latest.age;
-                    if (latest.weight) document.getElementById('user-weight').value = latest.weight;
-                    if (latest.height) document.getElementById('user-height').value = latest.height;
-                    if (latest.gender === 'male' || latest.gender === 'female') {
-                        const r = document.getElementById('gender-' + latest.gender);
-                        if (r) r.checked = true;
-                    }
-                }
-            } catch (e) {
-                console.warn('[specialist] failed to parse cached analysis', e);
-            }
-        }
+        // Clear form for new client
+        document.getElementById('patient-first-name').value = '';
+        document.getElementById('patient-last-name').value = '';
+        document.getElementById('user-age').value = '';
+        document.getElementById('user-weight').value = '';
+        document.getElementById('user-height').value = '';
+        document.getElementById('gender-male').checked = true;
 
         // Ensure state is set for specialist flow
         state.sessionId = sessionId;

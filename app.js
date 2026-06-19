@@ -111,11 +111,6 @@ async function routeUser() {
         return;
     }
 
-    if (authData.role === 'specialist-approved') {
-        window.location.href = 'specialist';
-        return;
-    }
-
     if (!authData.is_registered) {
         showScreen('onboarding-screen');
     } else {
@@ -127,8 +122,13 @@ async function routeUser() {
         showScreen('greeting-screen');
 
         setTimeout(() => {
-            if (['client', 'admin', 'specialist-approved'].includes(authData.role)) {
-                if (['client', 'admin'].includes(authData.role) && state.latestAnalysis) {
+            if (authData.role === 'specialist-approved') {
+                window.location.replace('specialist');
+                return;
+            }
+
+            if (['client', 'admin'].includes(authData.role)) {
+                if (state.latestAnalysis) {
                     const latest = state.latestAnalysis;
                     if (latest.age) document.getElementById('user-age').value = latest.age;
                     if (latest.weight) document.getElementById('user-weight').value = latest.weight;
@@ -137,13 +137,6 @@ async function routeUser() {
                         const r = document.getElementById('gender-' + latest.gender);
                         if (r) r.checked = true;
                     }
-                }
-
-                if (authData.role === 'specialist-approved') {
-                    const helperSwitch = document.querySelector('.helper-switch');
-                    if (helperSwitch) helperSwitch.style.display = 'none';
-                    const hasHelper = document.getElementById('has-helper');
-                    if (hasHelper) hasHelper.checked = true; // force 4 photos
                 }
 
                 showScreen('form-screen');

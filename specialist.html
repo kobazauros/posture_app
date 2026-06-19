@@ -40,15 +40,51 @@
         }
 
         .status-waiting {
-            background: rgba(255, 159, 10, 0.2);
-            color: #ff9f0a;
-            border: 1px solid rgba(255, 159, 10, 0.4);
+            background: rgba(214, 106, 0, 0.1);
+            color: #cc6600;
+            border: 1px solid rgba(214, 106, 0, 0.3);
         }
 
         .status-done {
             background: rgba(52, 199, 89, 0.2);
             color: var(--color-green);
             border: 1px solid rgba(52, 199, 89, 0.4);
+        }
+
+        .status-returning {
+            background: rgba(0, 150, 255, 0.1);
+            color: #007aff;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .status-draft {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .client-card-new {
+            border-color: var(--color-green);
+            box-shadow: 0 0 15px rgba(52, 199, 89, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .status-returning {
+                background: rgba(0, 255, 255, 0.2);
+                color: var(--color-cyan);
+                border-color: rgba(0, 255, 255, 0.4);
+            }
+
+            .status-draft {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+
+            .status-waiting {
+                background: rgba(255, 159, 10, 0.2);
+                color: #ff9f0a;
+                border-color: rgba(255, 159, 10, 0.4);
+            }
         }
 
         .card-actions {
@@ -151,14 +187,27 @@
     </div>
 
     <!-- PROFILE MODAL (History) -->
-    <div id="profile-screen" class="screen stub-screen">
-        <div class="form-container" style="max-width: 600px; text-align: left;">
-            <h2 class="form-title" id="profile-name">История</h2>
-            <div class="plan-options" id="profile-history-list">
+    <div id="profile-screen" class="screen" style="display:none; flex-direction: column;">
+        <div class="form-container"
+            style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; width: 100%; align-self: stretch;">
+
+            <div class="profile-header"
+                style="position: relative; display: flex; align-items: flex-start; min-height: 48px; margin-bottom: 20px;">
+                <h1 id="profile-name" style="font-size: 24px; font-weight: 700; margin: 0;">История</h1>
+            </div>
+
+            <div class="plan-options" id="profile-history-list"
+                style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
                 <!-- Dynamically populated -->
             </div>
-            <button class="secondary-btn action-btn" onclick="closeProfileScreen()"
-                style="width: 100%; margin-top: 20px;">НАЗАД</button>
+
+            <div style="flex-shrink: 0; padding-top: 10px;">
+                <button id="profile-new-analysis-btn" class="primary-btn action-btn"
+                    onclick="createNewAnalysisForClient()" style="width: 100%; margin-bottom: 10px;">+ НОВЫЙ
+                    АНАЛИЗ</button>
+                <button class="secondary-btn action-btn" onclick="closeProfileScreen()"
+                    style="width: 100%; border-style: none;">НАЗАД</button>
+            </div>
         </div>
     </div>
 
