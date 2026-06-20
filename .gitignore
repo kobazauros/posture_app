@@ -5,3 +5,8 @@ results/*
 .env
 .venv/*
 *.toml
+test_photos/*
+.pytest_cache/*
+tests/*
+scratch/*
+*.sqlite

@@ -305,6 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dashboard-screen').style.display = 'none';
         document.getElementById('profile-screen').style.display = 'flex';
         document.getElementById('profile-name').textContent = `История: ${fullName}`;
+        
+        window.currentProfileClient = item;
 
         const specialistId = sessionStorage.getItem('posture_app_user_id');
         const newAnalysisBtn = document.getElementById('profile-new-analysis-btn');
@@ -361,8 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to load history', err);
             listEl.innerHTML = '<p style="text-align:center; color:var(--error-color); margin-top:30px;">Ошибка загрузки истории</p>';
         }
-
-        window.currentProfileClient = item;
     };
 
     window.createNewAnalysisForClient = () => {

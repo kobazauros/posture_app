@@ -180,6 +180,18 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
             logger.info(f"save_draft_analysis for author={author_id}: latest_row={latest}")
             
             if latest and latest.get('status', '').strip() == 'draft':
+                # For specialist web flow: only update if the patient names match!
+                latest_fname = latest.get('patient_first_name') or ''
+                latest_lname = latest.get('patient_last_name') or ''
+                curr_fname = patient_first_name or ''
+                curr_lname = patient_last_name or ''
+                
+                is_same_patient = (curr_fname == latest_fname and curr_lname == latest_lname)
+                should_update = not (patient_first_name or patient_last_name) or is_same_patient
+            else:
+                should_update = False
+                
+            if should_update:
                 logger.info(f"save_draft_analysis: Updating existing draft {latest['id']}")
                 # Update existing draft
                 cur.execute(
@@ -194,7 +206,7 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
                 res = cur.fetchone()
                 analysis_id = dict(res)['id'] if res else None
             else:
-                logger.info(f"save_draft_analysis: Inserting NEW draft (status was not draft or latest was None)")
+                logger.info(f"save_draft_analysis: Inserting NEW draft (status was not draft or different patient)")
                 # Insert new draft
                 cur.execute(
                     """
