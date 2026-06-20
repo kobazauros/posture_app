@@ -375,6 +375,23 @@ def api_specialist_clients():
     clients = database.search_specialist_clients(specialist_id, query, limit, offset)
     return jsonify({'clients': clients})
 
+@app.route('/api/specialist/client_history', methods=['GET'])
+def api_specialist_client_history():
+    user = get_user_from_request(request)
+    if not user or user.get('role') not in ['specialist-approved']:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    author_id = request.args.get('author_id')
+    first_name = request.args.get('first_name', '')
+    last_name = request.args.get('last_name', '')
+    
+    if not author_id:
+        return jsonify({'error': 'Missing author_id'}), 400
+        
+    specialist_id = user['telegram_id']
+    history = database.get_client_history(specialist_id, author_id, first_name, last_name)
+    return jsonify({'history': history})
+
 @app.route('/api/specialist/pool', methods=['GET'])
 def api_specialist_pool():
     user = get_user_from_request(request)

@@ -367,6 +367,36 @@ def search_specialist_clients(specialist_id, query='', limit=20, offset=0):
     finally:
         conn.close()
 
+def get_client_history(specialist_id, author_id, first_name, last_name):
+    """
+    Get all analyses for a specific client (identified by author_id + name) 
+    that are accessible by the specialist.
+    """
+    conn = get_db_connection()
+    if not conn: return []
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT pa.*, u.first_name as tg_first_name, u.last_name as tg_last_name
+                FROM public.posture_analyses pa
+                LEFT JOIN public.users u ON pa.author_id = u.telegram_id::bigint
+                WHERE (pa.specialist_id = %s OR pa.author_id = %s)
+                  AND pa.author_id = %s
+                  AND COALESCE(pa.patient_first_name, '') = %s
+                  AND COALESCE(pa.patient_last_name, '') = %s
+                ORDER BY pa.created_at DESC
+                """,
+                (specialist_id, specialist_id, author_id, first_name, last_name)
+            )
+            res = cur.fetchall()
+            return [dict(r) for r in res]
+    except Exception as e:
+        logger.error(f"Error getting client history: {e}")
+        return []
+    finally:
+        conn.close()
+
 def get_premium_pool(limit=20, offset=0):
     """
     Get unassigned premium analyses.

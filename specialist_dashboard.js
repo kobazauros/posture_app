@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.openProfile = (id) => {
+    window.openProfile = async (id) => {
         const item = (myClientsList || []).find(c => c.id === id) || (poolList || []).find(c => c.id === id);
         if (!item) return;
 
@@ -316,37 +316,51 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const historyList = (myClientsList || []).filter(c =>
-            c.author_id === item.author_id &&
-            (c.patient_first_name || '') === (item.patient_first_name || '') &&
-            (c.patient_last_name || '') === (item.patient_last_name || '')
-        );
-
         const listEl = document.getElementById('profile-history-list');
-        listEl.innerHTML = '';
+        listEl.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:30px;">Загрузка...</p>';
 
-        historyList.forEach((histItem, index) => {
-            const dateStr = new Date(histItem.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const statusHtml = histItem.status === 'completed'
-                ? '<span class="status-badge status-done">Завершено</span>'
-                : '<span class="status-badge status-waiting">Требует анализа</span>';
+        try {
+            const authorId = encodeURIComponent(item.author_id);
+            const fName = encodeURIComponent(item.patient_first_name || '');
+            const lName = encodeURIComponent(item.patient_last_name || '');
+            const res = await fetch(`api/specialist/client_history?author_id=${authorId}&first_name=${fName}&last_name=${lName}`, {
+                headers: { 'Authorization': sessionId }
+            });
+            const data = await res.json();
+            const historyList = data.history || [];
 
-            const div = document.createElement('div');
-            div.className = 'plan-card';
-            div.style.marginBottom = '10px';
-            div.style.cursor = 'pointer';
-            div.onclick = () => openCorrection(histItem.id);
-            div.innerHTML = `
-                <div class="card-content-wrapper" style="width: 100%;">
-                    <div class="client-header" style="margin-bottom: 8px;">
-                        <h3 class="plan-title" style="margin: 0;">Анализ #${historyList.length - index}</h3>
-                        ${statusHtml}
+            listEl.innerHTML = '';
+            
+            if (historyList.length === 0) {
+                listEl.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:30px;">История пуста</p>';
+            }
+
+            historyList.forEach((histItem, index) => {
+                const dateStr = new Date(histItem.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const statusHtml = histItem.status === 'completed'
+                    ? '<span class="status-badge status-done">Завершено</span>'
+                    : '<span class="status-badge status-waiting">Требует анализа</span>';
+
+                const div = document.createElement('div');
+                div.className = 'plan-card';
+                div.style.marginBottom = '10px';
+                div.style.cursor = 'pointer';
+                div.onclick = () => openCorrection(histItem.id);
+                div.innerHTML = `
+                    <div class="card-content-wrapper" style="width: 100%;">
+                        <div class="client-header" style="margin-bottom: 8px;">
+                            <h3 class="plan-title" style="margin: 0;">Анализ #${historyList.length - index}</h3>
+                            ${statusHtml}
+                        </div>
+                        <div class="client-date" style="color: var(--text-secondary); font-size: 13px;">Дата: ${dateStr}</div>
                     </div>
-                    <div class="client-date" style="color: var(--text-secondary); font-size: 13px;">Дата: ${dateStr}</div>
-                </div>
-            `;
-            listEl.appendChild(div);
-        });
+                `;
+                listEl.appendChild(div);
+            });
+        } catch (err) {
+            console.error('Failed to load history', err);
+            listEl.innerHTML = '<p style="text-align:center; color:var(--error-color); margin-top:30px;">Ошибка загрузки истории</p>';
+        }
 
         window.currentProfileClient = item;
     };
