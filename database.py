@@ -393,7 +393,20 @@ def get_client_history(specialist_id, author_id, first_name, last_name):
                 SELECT pa.*, u.first_name as tg_first_name, u.last_name as tg_last_name
                 FROM public.posture_analyses pa
                 LEFT JOIN public.users u ON pa.author_id = u.telegram_id::bigint
-                WHERE (pa.specialist_id = %s OR pa.author_id = %s)
+                WHERE (
+                    pa.specialist_id = %s 
+                    OR pa.author_id = %s
+                    OR EXISTS (
+                        SELECT 1 
+                        FROM public.posture_analyses pool_pa 
+                        WHERE pool_pa.author_id = pa.author_id 
+                          AND COALESCE(pool_pa.patient_first_name, '') = COALESCE(pa.patient_first_name, '')
+                          AND COALESCE(pool_pa.patient_last_name, '') = COALESCE(pa.patient_last_name, '')
+                          AND pool_pa.analysis_type = 'premium' 
+                          AND pool_pa.specialist_id IS NULL 
+                          AND pool_pa.status != 'draft'
+                    )
+                )
                   AND pa.author_id = %s
                   AND COALESCE(pa.patient_first_name, '') = %s
                   AND COALESCE(pa.patient_last_name, '') = %s

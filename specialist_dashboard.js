@@ -212,9 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let badgeHtml = '';
-        if (item.analysis_type === 'premium') {
-            badgeHtml = `<span class="plan-badge">PREMIUM</span>`;
-        }
 
         let statusHtml = '';
         if (isPool) {
@@ -255,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         div.innerHTML = `
             <div class="card-content-wrapper" style="width: 100%;">
                 <div class="client-header">
-                    <h3 class="plan-title">${fullName} ${badgeHtml}</h3>
+                    <h3 class="plan-title">${fullName}</h3>
                     ${statusHtml}
                 </div>
                 <p class="plan-desc">${descText}</p>
@@ -339,9 +336,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             historyList.forEach((histItem, index) => {
                 const dateStr = new Date(histItem.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const statusHtml = histItem.status === 'completed'
-                    ? '<span class="status-badge status-done">Завершено</span>'
-                    : '<span class="status-badge status-waiting">Требует анализа</span>';
+                let badges = '';
+                if (histItem.analysis_type === 'basic') {
+                    badges = '<span class="status-badge status-draft">Базовый</span>';
+                } else {
+                    const statusBadge = histItem.status === 'completed'
+                        ? '<span class="status-badge status-done">Завершено</span>'
+                        : '<span class="status-badge status-waiting">Требует анализа</span>';
+                    badges = `<span class="status-badge status-returning" style="margin-right: 5px;">Premium</span>${statusBadge}`;
+                }
 
                 const div = document.createElement('div');
                 div.className = 'plan-card';
@@ -352,7 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="card-content-wrapper" style="width: 100%;">
                         <div class="client-header" style="margin-bottom: 8px;">
                             <h3 class="plan-title" style="margin: 0;">Анализ #${historyList.length - index}</h3>
-                            ${statusHtml}
+                            <div style="display:flex; align-items:center;">
+                                ${badges}
+                            </div>
                         </div>
                         <div class="client-date" style="color: var(--text-secondary); font-size: 13px;">Дата: ${dateStr}</div>
                     </div>
