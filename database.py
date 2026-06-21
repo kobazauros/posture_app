@@ -313,7 +313,7 @@ def search_specialist_clients(specialist_id, query='', limit=20, offset=0):
                         u.first_name as tg_first_name,
                         u.last_name as tg_last_name,
                         -- Оптимизация: считаем общее количество за один проход по выборке
-                        COUNT(*) OVER(
+                        COUNT(CASE WHEN pa.analysis_type = 'premium' AND pa.status != 'draft' THEN 1 END) OVER(
                             PARTITION BY pa.author_id, 
                                          COALESCE(pa.patient_first_name, ''), 
                                          COALESCE(pa.patient_last_name, '')
@@ -346,7 +346,7 @@ def search_specialist_clients(specialist_id, query='', limit=20, offset=0):
                         pa.*,
                         u.first_name as tg_first_name,
                         u.last_name as tg_last_name,
-                        COUNT(*) OVER(
+                        COUNT(CASE WHEN pa.analysis_type = 'premium' AND pa.status != 'draft' THEN 1 END) OVER(
                             PARTITION BY pa.author_id, 
                                          COALESCE(pa.patient_first_name, ''), 
                                          COALESCE(pa.patient_last_name, '')
@@ -420,7 +420,7 @@ def get_premium_pool(limit=20, offset=0):
             cur.execute(
                 """
                 SELECT pa.*, u.first_name as tg_first_name, u.last_name as tg_last_name,
-                       (SELECT COUNT(*) FROM public.posture_analyses prev WHERE prev.author_id = pa.author_id) as previous_count
+                       (SELECT COUNT(*) FROM public.posture_analyses prev WHERE prev.author_id = pa.author_id AND prev.analysis_type = 'premium' AND prev.status != 'draft') as previous_count
                 FROM public.posture_analyses pa
                 LEFT JOIN public.users u ON pa.author_id = u.telegram_id::bigint
                 WHERE pa.analysis_type = 'premium' 
