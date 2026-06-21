@@ -163,6 +163,11 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
     if not author_id:
         return None
 
+    # Определяем, является ли это офлайн-заявкой (созданной специалистом для пациента)
+    # Если переданы patient_first_name, значит это Кабинет Специалиста.
+    is_offline = bool(patient_first_name or patient_last_name)
+    specialist_id = author_id if is_offline else None
+
     conn = get_db_connection()
     if not conn:
         return None
@@ -197,11 +202,11 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
                 cur.execute(
                     """
                     UPDATE posture_analyses 
-                    SET age = %s, weight = %s, height = %s, gender = %s, analysis_type = %s, patient_first_name = %s, patient_last_name = %s, created_at = CURRENT_TIMESTAMP
+                    SET age = %s, weight = %s, height = %s, gender = %s, analysis_type = %s, patient_first_name = %s, patient_last_name = %s, specialist_id = COALESCE(specialist_id, %s), created_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                     RETURNING id
                     """,
-                    (age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, latest['id'])
+                    (age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, specialist_id, latest['id'])
                 )
                 res = cur.fetchone()
                 analysis_id = dict(res)['id'] if res else None
@@ -210,11 +215,11 @@ def save_draft_analysis(author_id, age, weight, height, gender, analysis_type='b
                 # Insert new draft
                 cur.execute(
                     """
-                    INSERT INTO posture_analyses (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, status, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'draft', CURRENT_TIMESTAMP)
+                    INSERT INTO posture_analyses (author_id, specialist_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name, status, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'draft', CURRENT_TIMESTAMP)
                     RETURNING id
                     """,
-                    (author_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
+                    (author_id, specialist_id, age, weight, height, gender, analysis_type, patient_first_name, patient_last_name)
                 )
                 res = cur.fetchone()
                 analysis_id = dict(res)['id'] if res else None
@@ -320,7 +325,10 @@ def search_specialist_clients(specialist_id, query='', limit=20, offset=0):
                         ) as total_analyses
                     FROM public.posture_analyses pa
                     LEFT JOIN public.users u ON pa.author_id = u.telegram_id::bigint
-                    WHERE (pa.specialist_id = %s OR pa.author_id = %s)
+                    WHERE (
+                        pa.specialist_id = %s 
+                        OR (pa.author_id = %s AND (pa.patient_first_name IS NOT NULL OR pa.patient_last_name IS NOT NULL))
+                    )
                       AND (
                           -- COALESCE гарантирует, что ILIKE сработает, даже если в базе NULL
                           COALESCE(pa.patient_first_name, '') ILIKE %s OR 
@@ -353,7 +361,10 @@ def search_specialist_clients(specialist_id, query='', limit=20, offset=0):
                         ) as total_analyses
                     FROM public.posture_analyses pa
                     LEFT JOIN public.users u ON pa.author_id = u.telegram_id::bigint
-                    WHERE (pa.specialist_id = %s OR pa.author_id = %s)
+                    WHERE (
+                        pa.specialist_id = %s 
+                        OR (pa.author_id = %s AND (pa.patient_first_name IS NOT NULL OR pa.patient_last_name IS NOT NULL))
+                    )
                     ORDER BY 
                         pa.author_id ASC, 
                         COALESCE(pa.patient_first_name, '') ASC, 
