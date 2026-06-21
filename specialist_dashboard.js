@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dashboard-screen').style.display = 'none';
         document.getElementById('profile-screen').style.display = 'flex';
         document.getElementById('profile-name').textContent = `История: ${fullName}`;
-        
+
         window.currentProfileClient = item;
 
         const specialistId = sessionStorage.getItem('posture_app_user_id');
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyList = data.history || [];
 
             listEl.innerHTML = '';
-            
+
             if (historyList.length === 0) {
                 listEl.innerHTML = '<p style="text-align:center; color:var(--text-secondary); margin-top:30px;">История пуста</p>';
             }

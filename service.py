@@ -252,15 +252,33 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
     # Patient Information Section
     story.append(Paragraph("Информация о пациенте", heading_style))
     
-    patient_info_data = [
-        ["ID пациента", patient_data.get('User ID', 'N/A')],
+    is_offline = patient_data.get('Is Offline', 'False') == 'True'
+    user_id_val = patient_data.get('User ID', 'N/A')
+    client_first = patient_data.get('Client First', '')
+    client_last = patient_data.get('Client Last', '')
+    specialist_first = patient_data.get('Specialist First', '')
+    specialist_last = patient_data.get('Specialist Last', '')
+
+    patient_info_data = []
+
+    if is_offline:
+        patient_info_data.append(["ID специалиста", user_id_val])
+        if specialist_first or specialist_last:
+            patient_info_data.append(["Специалист", f"{specialist_first} {specialist_last}".strip()])
+    else:
+        patient_info_data.append(["ID пациента", user_id_val])
+
+    if client_first or client_last:
+        patient_info_data.append(["Пациент", f"{client_first} {client_last}".strip()])
+
+    patient_info_data.extend([
         ["Возраст", patient_data.get('Age', 'N/A')],
         ["Пол", patient_data.get('Gender', 'N/A')],
         ["Рост (см)", patient_data.get('Height', 'N/A')],
         ["Вес (кг)", patient_data.get('Weight', 'N/A')],
-    ]
+    ])
     
-    patient_table = Table(patient_info_data, colWidths=[3*cm, 12*cm])
+    patient_table = Table(patient_info_data, colWidths=[3.5*cm, 11.5*cm])
     patient_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f5f5f5')),
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),

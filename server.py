@@ -172,7 +172,31 @@ def upload():
         }), 400
     
     # 1. Сохраняем анкету в .txt
-    # Теперь ID пользователя ГАРАНТИРОВАННО записывается первой строкой
+    # Получаем данные специалиста/пациента из базы для отчета
+    import database
+    user = database.get_user_by_telegram_id(uid)
+    if user:
+        user_first = user.get('first_name') or ''
+        user_last = user.get('last_name') or ''
+        user_role = user.get('role') or ''
+    else:
+        user_first = ''
+        user_last = ''
+        user_role = ''
+
+    is_offline = (user_role == 'specialist-approved')
+    
+    if is_offline:
+        client_first = info.get('patient_first_name', '')
+        client_last = info.get('patient_last_name', '')
+        specialist_first = user_first
+        specialist_last = user_last
+    else:
+        client_first = user_first
+        client_last = user_last
+        specialist_first = ''
+        specialist_last = ''
+
     info_filename = f"{uid}_{ts}_data.txt"
     analysis_result = None
     analysis_error = None
@@ -180,10 +204,15 @@ def upload():
     try:
         with open(os.path.join(UPLOAD_FOLDER, info_filename), 'w', encoding='utf-8') as f:
             f.write(f"User ID: {uid}\n")
-            f.write(f"Age: {info.get('age')}\n")
-            f.write(f"Weight: {info.get('weight')}\n")
-            f.write(f"Height: {info.get('height')}\n")
-            f.write(f"Gender: {info.get('gender')}\n")
+            f.write(f"Is Offline: {is_offline}\n")
+            f.write(f"Client First: {client_first}\n")
+            f.write(f"Client Last: {client_last}\n")
+            f.write(f"Specialist First: {specialist_first}\n")
+            f.write(f"Specialist Last: {specialist_last}\n")
+            f.write(f"Age: {info.get('age', '')}\n")
+            f.write(f"Weight: {info.get('weight', '')}\n")
+            f.write(f"Height: {info.get('height', '')}\n")
+            f.write(f"Gender: {info.get('gender', '')}\n")
     except Exception as e:
         print(f"Ошибка при записи текстового файла: {e}")
     
