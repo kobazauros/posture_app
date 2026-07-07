@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководство пользователя: Система анализа осанки</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="../theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Руководство пользователя</h1>
+        <p class="subtitle">Инструкция по работе с Системой анализа осанки</p>
+
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchTab('client')">Сценарий Клиента</button>
+            <button class="nav-btn" onclick="switchTab('specialist')">Сценарий Специалиста</button>
+        </div>
+
+        <!-- CLIENT SECTION -->
+        <div id="client" class="section active">
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 1: Запуск приложения</h2>
+                    </div>
+                    <p>Для начала работы клиенту необходимо запустить бота и открыть веб-приложение.</p>
+                    <ul>
+                        <li>Нажмите кнопку <strong>Начать анализ осанки</strong> в меню Telegram-бота.</li>
+                        <li>Telegram запросит разрешение на открытие веб-приложения. Нажмите кнопку
+                            <strong>Open</strong> во всплывающем окне, чтобы перейти по защищенной ссылке.
+                        </li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="client_scenario/client_01.png" alt="Запуск">
+                    <img src="client_scenario/client_02.png" alt="Открыть ссылку">
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 2: Анкета и выбор тарифа</h2>
+                    </div>
+                    <p>На этом этапе система предлагает познакомиться и указать Ваши Имя и Фамилию.</p>
+                    <p>Необходимо также указать вашу роль - <strong>клиент</strong>.</p>
+                    <p>В дальнейшем система запрашивает Ваши данные для подбора индивидуальных рекомендаций по улучшению
+                        Вашей осанки.
+                    </p>
+                    <ul>
+                        <li><strong>Возраст:</strong> Введите ваш полный возраст цифрами.</li>
+                        <li><strong>Вес и Рост:</strong> Укажите физические параметры.</li>
+                        <li><strong>Пол:</strong> Выберите <em>Муж.</em> или <em>Жен.</em> с помощью переключателя.</li>
+                        <li><strong>Режим съемки:</strong> Съемка в зеркале (3 фотографии: спереди, с левого бока,
+                            с правого бока); съемка с помощью таймера отложенного спуска, либо с помощью ассистента
+                            (добавляется
+                            вид сзади).</li>
+                        <li><strong>Тариф:</strong> Выберите тип анализа — <em>Базовый</em> (автоматический расчет ИИ)
+                            или
+                            <em>Premium</em> (ИИ-анализ под контролем квалифицированного специалиста).
+                        </li>
+                        <li>Нажмите кнопку <strong>НАЧАТЬ</strong> внизу экрана, чтобы включить камеру.</li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="client_scenario/client_03.png" alt="Знакомство">
+                    <img src="client_scenario/client_04.png" alt="Анкета">
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 3: Съемка фотографий</h2>
+                    </div>
+                    <p>В зависимости от режима съемки нужно будет сделать 3 или 4 фотографии, следуя указаниям вверху
+                        экрана. После съемки каждой фотографии у Вас будет возможность одобрить, либо переснять
+                        фотографию.</p>
+                    <ul>
+                        <li><strong>Расположение в кадре:</strong> Разместите фигуру между метками макушки и стоп по
+                            центру кадра, система уведомит Вас если фигура не в кадре, либо не в той позе.</li>
+                        <li><strong>Индикатор горизонта:</strong> Зеленый цвет означает, что телефон выровнен, если
+                            телефон наклонен система уведомит Вас как скорректировать положение.</li>
+                        <li><strong>Кнопка спуска:</strong> Становится активной (белой) только когда телефон расположен
+                            строго вертикально.</li>
+                        <li><strong>Таймер:</strong> Установите телефон на полку, удерживайте иконку часов слева для
+                            отложенного спуска (3, 5, 10
+                            сек - повторное нажатие сбрасывает таймер), и нажмите кнопку спуска. Отойдите от камеры
+                            так, чтобы
+                            оказаться в кадре. Спуск начнет срабатывать после того как вы полностью окажетесь в кадре.
+                        </li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="client_scenario/client_05a.png" alt="Камера">
+                    <img src="client_scenario/client_05b.png" alt="Таймер">
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 4: Результат</h2>
+                    </div>
+                    <p>Завершающий шаг, на котором данные уходят на сервер.</p>
+                    <ul>
+                        <li>Появится информационный экран <strong>Фотографии отправлены на анализ</strong>. После этого
+                            можно закрыть
+                            веб-приложение.</li>
+                        <li>Вернитесь в чат с ботом. Через некоторое время бот пришлет готовый PDF-отчет с подробными
+                            результатами анализа и персональными рекомендациями.</li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="client_scenario/client_06.png" alt="Отправка">
+                    <img src="client_scenario/client_07.png?v=2" alt="Отчет">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SPECIALIST SECTION -->
+        <div id="specialist" class="section">
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 1: Заявка на статус специалиста</h2>
+                    </div>
+                    <p>Впервые зайдя в бота, специалист должен пройти регистрацию.</p>
+                    <ul>
+                        <li>Нажмите кнопку <strong>Начать анализ осанки</strong> в Telegram.</li>
+                        <li>Telegram запросит разрешение на открытие защищенной ссылки на веб-приложение, необходимо её
+                            открыть.</li>
+                    </ul>
+                </div>
+                <div class="step-images" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <img src="spec_scenario/spec_01.png" alt="Старт"
+                        style="width: 100%; height: auto; max-height: none;">
+                    <img src="spec_scenario/spec_02.png" alt="Открыть ссылку"
+                        style="width: 100%; height: auto; max-height: none;">
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 2: Регистрация и отправка запроса</h2>
+                    </div>
+                    <p>На этом этапе система предлагает познакомиться и указать Ваши Имя и Фамилию.</p>
+                    <p>Необходимо также указать вашу роль - <strong>специалист</strong>.</p>
+                    <p>Далее необходимо нажать кнопку <strong>ПРОДОЛЖИТЬ</strong>.</p>
+                    <p>Система уведомит Вас о том, что заявка отправлена.</p>
+
+                </div>
+                <div class="step-images" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <img src="spec_scenario/spec_03.png" alt="Экран знакомства"
+                        style="width: 100%; height: auto; max-height: none;">
+                    <img src="spec_scenario/spec_04.png" alt="Отправка заявки"
+                        style="width: 100%; height: auto; max-height: none;">
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 3: Одобрение Администратором</h2>
+                    </div>
+                    <p>Модерация заявки администратором проекта.</p>
+                    <ul>
+                        <li>Администратор проверяет Вашу заявку в панели управления и либо одобряет либо отказывает Вам.
+                        </li>
+                        <li>В случае получения автоматического уведомления: <strong>Ваша заявка одобрена, запустите
+                                анализ осанки повторно.</strong> - следует нажать кнопку <strong>Начать анализ
+                                осанки</strong> повторно и снова перейти по защищенной ссылке в кабинет специалиста.
+                        </li>
+                        <li>В случае отказа - необходимо связаться с администратором проекта для выяснения причин.
+                        </li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="spec_scenario/spec_05.png" alt="Решение админа">
+                    <img src="spec_scenario/spec_06.png" alt="Уведомление">
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 4: Кабинет и Добавление клиента</h2>
+                    </div>
+                    <p>В заголовке кабинета указаны Ваши инициалы, Имя и Фамилия. Далее идет переключатель списка Ваших
+                        текущих клиентов <strong>Мои клиенты</strong> и пула заявок, <strong>Новые заявки</strong>, от
+                        онлайн-клиентов, заказавших
+                        премиальную услугу. Для каждого режима предусмотрено поисковое окно для фильтра списка.</p>
+                    <p>Под поисковым окном выводится список недавних клиентов либо недавно поступивших заявок.</p>
+                    <p>Внизу экрана находится кнопка <strong>+ ДОБАВИТЬ КЛИЕНТА</strong>, позволяющая Вам
+                        зарегистрировать пришедшего к Вам клиента.</p>
+                    <p>В окне <strong>Анализ осанки</strong> для нового клиента необходимо указать его <strong>Имя и
+                            Фамилию, Возраст, Вес, Рост и Пол</strong>. Нажать кнопку <strong>НАЧАТЬ</strong>.</p>
+                </div>
+                <div class="step-images">
+                    <img src="spec_scenario/spec_07.png" alt="Кабинет">
+                    <img src="spec_scenario/spec_08.png" alt="Добавить">
+
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 5: Съемка фотографий</h2>
+                    </div>
+                    <p>В отличие от клиентского режима, специалист делает фото своего клиента самостоятельно с четырех
+                        ракурсов - спереди, с левого и правого бока и сзади. После съемки каждой фотографии у Вас будет
+                        возможность одобрить, либо переснять
+                        фотографию.</p>
+                    <ul>
+                        <li><strong>Расположение в кадре:</strong> Разместите фигуру между метками макушки и стоп по
+                            центру кадра, система уведомит Вас если фигура не в кадре, либо не в той позе.</li>
+                        <li><strong>Индикатор горизонта:</strong> Зеленый цвет означает, что телефон выровнен, если
+                            телефон наклонен система уведомит Вас как скорректировать положение.</li>
+                        <li><strong>Кнопка спуска:</strong> Становится активной (белой) только когда телефон расположен
+                            строго вертикально.</li>
+                        <li><strong>Таймер:</strong> Позволяет установить телефон на полку, и скорректировать позу
+                            клиента самостоятельно. Для этого удерживайте иконку часов слева для
+                            отложенного спуска (3, 5, 10
+                            сек - повторное нажатие сбрасывает таймер), и нажмите кнопку спуска. Расположите клиента
+                            так, чтобы он оказался в кадре между метками макушки и стоп. Спуск начнет срабатывать после
+                            того как клиент полностью окажется в кадре в правильной позиции (фронтально, слева, справа,
+                            спиной).
+                        </li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="spec_scenario/spec_9a.png" alt="Камера">
+                    <img src="spec_scenario/spec_9b.png" alt="Камера">
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 6: Результат</h2>
+                    </div>
+                    <p>Завершающий шаг, на котором данные уходят на сервер.</p>
+                    <ul>
+                        <li>Появится информационный экран "Данные клиентов и фотографии сохранены. Результаты ИИ-анализа
+                            будут доступны в карточке клиента." Кнопка <strong>Вернуться в кабинет</strong> позволяет
+                            вернуться в кабинет. Внимание: Встроенный просмотр результатов ИИ-анализа прямо в кабинете
+                            сейчас находится в стадии разработки. На данный момент система автоматически формирует
+                            итоговый PDF-отчет и присылает его вам в чат с ботом Telegram.</li>
+                        <li>Для возврата в чат с ботом нужно нажать системную кнопку закрытия окна ("крестик") в левом
+                            верхнем углу экрана. <span><img src="spec_scenario/spec_menu.png" alt="Системное меню"
+                                    class="inline-icon">
+                            </span>Через
+                            некоторое время бот пришлет готовый PDF-отчет с подробными
+                            результатами анализа и персональными рекомендациями для клиента.</li>
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="spec_scenario/spec_10.png" alt="Отправка">
+                    <img src="spec_scenario/spec_11.png?v=2" alt="Отчет">
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 7: Работа с клиентской базой - система ярлыков</h2>
+                    </div>
+                    <p>Для удобной навигации по истории пациента в окне <strong>ПРОФИЛЬ</strong> используется система
+                        цветных ярлыков.</p>
+                    <p><strong>Типы отчетов (видны в Профиле клиента - История заявок):</strong></p>
+                    <ul>
+                        <li><span
+                                style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:6px; font-weight:600; text-transform:uppercase; margin-right:5px; background: rgba(0, 0, 0, 0.05); color: #8e8e93; border: 1px solid rgba(0, 0, 0, 0.1);">Базовый</span>
+                            — отчет сгенерирован автоматически ИИ. Отображается в истории для понимания общей динамики
+                            осанки.</li>
+                        <li><span
+                                style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:6px; font-weight:600; text-transform:uppercase; margin-right:5px; background: rgba(0, 150, 255, 0.1); color: #007aff; border: 1px solid rgba(0, 150, 255, 0.3);">Premium</span>
+                            — премиальная заявка, созданная клиентом, подразумевающая ручную корректировку списка
+                            упражнений врачом.</li>
+                    </ul>
+                    <p><strong>Статусы заявок (видны как на карточке клиента - так и Профиле клиента - Истории
+                            заявок):</strong></p>
+                    <ul>
+                        <li><span
+                                style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:6px; font-weight:600; text-transform:uppercase; margin-right:5px; background: rgba(214, 106, 0, 0.1); color: #cc6600; border: 1px solid rgba(214, 106, 0, 0.3);">Ожидает
+                                разбора</span> — премиальная заявка находится в общем пуле (вкладка «Новые заявки») и
+                            ждет, пока кто-нибудь из врачей возьмет ее в работу.</li>
+                        <li><span
+                                style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:6px; font-weight:600; text-transform:uppercase; margin-right:5px; background: rgba(214, 106, 0, 0.1); color: #cc6600; border: 1px solid rgba(214, 106, 0, 0.3);">Требует
+                                анализа</span> — ИИ-анализ проведен - требуется Ваша корректировка, система ждет ваших
+                            финальных действий (кнопка <strong>КОРРЕКТИРОВАТЬ</strong>).</li>
+                        <li><span
+                                style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:6px; font-weight:600; text-transform:uppercase; margin-right:5px; background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid rgba(52, 199, 89, 0.4);">Завершено</span>
+                            — вы уже отработали эту заявку, и итоговый расширенный PDF-отчет отправлен клиенту.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 8: Работа с клиентской базой - Мои Клиенты</h2>
+                    </div>
+                    <p>Управление пациентами, закрепленными за вами.</p>
+                    <ul>
+                        <li>Во вкладке <strong>Мои клиенты</strong> отображаются карточки клиентов, которых Вы либо
+                            недавно создали, либо приняли в работу из Пула новых заявок на премиальные услуги. Прокрутка
+                            вниз позволяет увидеть большее количество клиентов. </li>
+                        <li>Нажмите <strong>КОРРЕКТИРОВАТЬ</strong>, чтобы открыть отчет пациента и скорректировать
+                            список упражнений. <em>(Функция в разработке)</em> </li>
+                        <li>Кнопка <strong>ПРОФИЛЬ</strong> открывает историю всех заявок пациента (Базовых и Премиум).
+                            для которых также отражается ярлык статуса</li>
+                        <li>Для того, чтобы сделать новый анализ текущего клиента необходимо пройти в Профиль и нажать
+                            кнопку <strong>+ НОВЫЙ АНАЛИЗ</strong>. Будет запущена форма Анализа осанки с
+                            предзаполненными данными клиента. Форма запускает стандартный процесс фотографирования
+                            клиента и ИИ анализа. </li>
+
+                    </ul>
+                </div>
+                <div class="step-images">
+                    <img src="spec_scenario/spec_12a.png" alt="Мои клиенты">
+                    <img src="spec_scenario/spec_12b.png" alt="Профиль">
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-text">
+                    <div class="step-header">
+                        <h2>Шаг 9: Работа с клиентской базой - Новые заявки</h2>
+                    </div>
+                    <p>Работа с входящими заявками от онлайн-клиентов, которые заказали премиальный доступ.</p>
+                    <ul>
+                        <li>Во вкладке <strong>«Новые заявки»</strong> отображаются заявки Premium, которые еще не взял
+                            в работу ни один врач.</li>
+                        <li>В заголовке страницы находятся две кнопки, которые позволяют фильтровать заявки от новых
+                            клиентов <span
+                                style="display:inline-block; font-size:12px; font-weight:500; padding:4px 10px; border-radius:20px; background:#34c759; color:white; border:1px solid #34c759; margin: 0 2px;">Новые</span>
+                            и от повторных <span
+                                style="display:inline-block; font-size:12px; font-weight:500; padding:4px 10px; border-radius:20px; background:#34c759; color:white; border:1px solid #34c759; margin: 0 2px;">Повторные</span>.
+                        </li>
+                        <li>Нажмите кнопку <strong>ПРОФИЛЬ</strong>, чтобы изучить всю прошлую историю пациента
+                            (базовые отчеты и прошлые премиальные заявки на анализ).</li>
+                        <li>Нажмите <strong>ВЗЯТЬ В РАБОТУ</strong>, чтобы закрепить этого клиента за собой. Нажатие
+                            этой кнопки - переводит карточку из Пула <em>Новые заявки</em> - в список <em>Мои
+                                клиенты</em>.</li>
+                    </ul>
+                </div>
+                <div class="step-images">
+
+                    <img src="spec_scenario/spec_13a.png" alt="Пул">
+                    <img src="spec_scenario/spec_13b.png" alt="История">
+                </div>
+            </div>
+
+
+
+
+
+        </div>
+
+        <button class="print-btn" onclick="window.print()">🖨 Сохранить как PDF</button>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
