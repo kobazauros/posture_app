@@ -114,16 +114,29 @@ def show_id(message):
     """Команда для получения ID чата пользователем"""
     bot.reply_to(message, f"Ваш Telegram ID: <code>{message.from_user.id}</code>", parse_mode="HTML")
 
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from database import get_user_by_telegram_id
+
 @bot.message_handler(commands=['help'])
 def show_help(message):
-    """Справочная информация"""
-    help_text = (
-        "<b>Как работает система?</b>\n\n"
-        "Бот присылает ссылку на внешний сайт. Сайт использует камеру и гироскоп "
-        "телефона для создания точных снимков. Как только вы отправите фото, врач "
-        "получит уведомление и подготовит отчет."
+    """Справочная информация (Открывает мануал)"""
+    # Формируем простую ссылку на инструкцию
+    import time
+    clean_url = WEB_URL.rstrip('/')
+    manual_url = f"{clean_url}/manual/index.html?v={int(time.time())}"
+    
+    markup = InlineKeyboardMarkup()
+    btn = InlineKeyboardButton(
+        text="📖 Открыть руководство",
+        web_app=WebAppInfo(url=manual_url)
     )
-    bot.send_message(message.chat.id, help_text, parse_mode="HTML")
+    markup.add(btn)
+    
+    help_text = (
+        "<b>Руководство пользователя</b>\n\n"
+        "Нажмите на кнопку ниже, чтобы открыть подробную инструкцию по работе с системой прямо в Telegram."
+    )
+    bot.send_message(message.chat.id, help_text, reply_markup=markup, parse_mode="HTML")
 
 from database import update_user_role, get_user_by_telegram_id
 

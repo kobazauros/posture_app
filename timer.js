@@ -86,6 +86,20 @@ export function bindTimerButton() {
         // Если удержание было коротким (< 300мс), сбрасываем таймер
         if (Date.now() - holdStartTime < 300) {
             state.captureTimer = 0;
+            
+            // НОВЫЙ КОД: Сбрасываем процесс съемки, если он был запущен
+            if (state.isTimerPending) {
+                state.isTimerPending = false;
+                if (captureCountdownInterval) {
+                    clearInterval(captureCountdownInterval);
+                    captureCountdownInterval = null;
+                }
+                const captureBtn = document.getElementById('capture-btn');
+                if (captureBtn) {
+                    captureBtn.innerText = '';
+                    captureBtn.classList.remove('timer-waiting', 'timer-active');
+                }
+            }
         }
         updateTimerUI();
     };
