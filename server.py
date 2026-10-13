@@ -25,7 +25,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='.')
+# static_folder=None: otherwise Flask exposes the whole project root under /static/
+app = Flask(__name__, static_folder=None)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
 @app.after_request
@@ -71,10 +72,29 @@ def index():
 app.register_blueprint(auth_bp)
 
 # Раздача CSS и JS
+# Only frontend assets are public. Everything else in the project root
+# (.env, results/, received_photos/, .git/, *.py, ...) must never be served.
+PUBLIC_EXTENSIONS = {'.html', '.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.webp'}
+PUBLIC_FILES = {'manifest.json'}
+PUBLIC_DIRS = {'manual'}
+
+
+def _is_public_asset(path):
+    parts = path.split('/')
+    if any(not part or part.startswith('.') for part in parts):
+        return False
+    if len(parts) > 1 and parts[0] not in PUBLIC_DIRS:
+        return False
+    name = parts[-1]
+    return name in PUBLIC_FILES or os.path.splitext(name)[1].lower() in PUBLIC_EXTENSIONS
+
+
 @app.route('/<path:path>')
-def static_files(path): 
-    """Serve static files from the project root."""
-    return send_from_directory('.', path)
+def static_files(path):
+    """Serve whitelisted frontend assets from the project root."""
+    if not _is_public_asset(path):
+        abort(404)
+    return send_from_directory(BASE_DIR, path)
 
 
 @app.route('/debug/log', methods=['POST'])
