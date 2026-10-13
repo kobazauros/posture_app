@@ -84,13 +84,8 @@ function captureFrameToPreview() {
     drawFrame(uploadCtx);
     state.pendingUnblurredPhoto = uploadCanvas.toDataURL('image/jpeg', 0.8);
 
-    // Preview: as the user saw it on screen while shooting. Phones display the
-    // front camera mirrored (selfie view), so mirror the preview to match.
-    // This affects only what is shown, never the photo sent to the server.
-    if (state.currentFacing === 'user') {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
+    // Preview: identical to the live camera view on screen, for any camera.
+    // The live <video> is never mirrored by the app, so neither is the preview.
     drawFrame(ctx);
 
     // --- ПРИМЕНЯЕМ РАЗМЫТИЕ ЛИЦА ТОЛЬКО ДЛЯ ПРЕВЬЮ ---
