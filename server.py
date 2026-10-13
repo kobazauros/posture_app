@@ -39,7 +39,12 @@ def add_header(response):
         response.headers['Expires'] = '0'
         return response
 
-    if any(ct in content_type for ct in ['text/html', 'text/css', 'javascript', 'image/', 'font/', 'application/wasm']):
+    if 'text/html' in content_type:
+        # HTML must always be revalidated: it carries the ?v= versions of JS/CSS,
+        # so a cached page keeps loading old scripts after a deploy.
+        # send_from_directory sets ETag/Last-Modified, so unchanged pages are a cheap 304.
+        response.headers['Cache-Control'] = 'no-cache'
+    elif any(ct in content_type for ct in ['text/css', 'javascript', 'image/', 'font/', 'application/wasm']):
         response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=86400'
     else:
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
