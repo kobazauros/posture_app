@@ -53,14 +53,6 @@ function captureFrameToPreview() {
 
     const useDigitalZoom = !state.zoomSupport && state.cameraZoom > 1.01;
 
-    // The server must always receive a true (non-mirrored) photo, otherwise left
-    // and right are swapped in the analysis. Camera frames are already true,
-    // except when the rear camera films a mirror: flip those back.
-    if (isFrameMirrored()) {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
-
     let cropX = 0, cropY = 0, cropWidth = video.videoWidth, cropHeight = video.videoHeight;
     if (useDigitalZoom) {
         cropWidth = video.videoWidth / state.cameraZoom;
@@ -69,14 +61,31 @@ function captureFrameToPreview() {
         cropY = (video.videoHeight - cropHeight) / 2;
     }
 
-    if (useDigitalZoom) {
-        ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-    } else {
-        ctx.drawImage(video, 0, 0);
-    }
+    const drawFrame = (targetCtx) => {
+        if (useDigitalZoom) {
+            targetCtx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+        } else {
+            targetCtx.drawImage(video, 0, 0);
+        }
+    };
 
-    // Save UNBLURRED frame to state for backend MediaPipe
-    state.pendingUnblurredPhoto = canvas.toDataURL('image/jpeg', 0.8);
+    // Photo for the server (UNBLURRED, for backend MediaPipe): it must always be a
+    // true (non-mirrored) image, otherwise left and right are swapped in the
+    // analysis. Camera frames are already true, except when the rear camera films
+    // a mirror: flip those back. The preview below keeps what the user saw live.
+    const uploadCanvas = document.createElement('canvas');
+    uploadCanvas.width = canvas.width;
+    uploadCanvas.height = canvas.height;
+    const uploadCtx = uploadCanvas.getContext('2d');
+    if (isFrameMirrored()) {
+        uploadCtx.translate(uploadCanvas.width, 0);
+        uploadCtx.scale(-1, 1);
+    }
+    drawFrame(uploadCtx);
+    state.pendingUnblurredPhoto = uploadCanvas.toDataURL('image/jpeg', 0.8);
+
+    // Preview: exactly as shown in the live camera view
+    drawFrame(ctx);
 
     // --- ПРИМЕНЯЕМ РАЗМЫТИЕ ЛИЦА ТОЛЬКО ДЛЯ ПРЕВЬЮ ---
     const status = getFigureStatus();

@@ -1,6 +1,6 @@
 import { attachFormValidation, validateForm, setFieldError } from './form.js?v=24';
 import { startCamera, switchCameraFacing } from './camera.js?v=24';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=24';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=25';
 import { state, stepLabels } from './state.js?v=24';
 
 /** Escape user-supplied text before inserting it into an innerHTML template. */
