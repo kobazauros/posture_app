@@ -300,8 +300,9 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
         received_photos_dir / f'{user_id}_{timestamp}_photo_2.jpg',
         received_photos_dir / f'{user_id}_{timestamp}_photo_3.jpg',
     ]
-    photo_labels = ["Фронтальный вид", "Профиль справа", "Профиль слева"]
-    view_types = ["frontal", "right_side", "left_side"]
+    # Order must match the capture flow in state.js (stepLabels)
+    photo_labels = ["Вид спереди", "Левый бок", "Правый бок"]
+    view_types = ["frontal", "left_side", "right_side"]
     if data_count >= 4:
         photo_paths.append(helper_photo)
         photo_labels.append("Вид со спины")

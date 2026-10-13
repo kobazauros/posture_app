@@ -1,14 +1,7 @@
 """Posture-analysis helpers built around Vertex AI Gemini responses."""
 
 import vertexai
-from vertexai.generative_models import GenerativeModel
-
-# `types` lives in different places depending on the installed SDK version.
-# Try the stable location and fall back to None.
-try:
-    from vertexai import types  # latest / expected location
-except Exception:
-    types = None
+from vertexai.generative_models import GenerativeModel, Part
 import base64
 import json
 import os
@@ -23,7 +16,6 @@ from typing import Any, Mapping, Sequence
 
 # Primary and fallback models to try in order
 MODEL_CHAIN = [
-    "gemini-2.5-flash-image",
     "gemini-2.5-pro",
     "gemini-2.5-flash",
 ]
@@ -63,7 +55,8 @@ def _build_patient_block(patient_data: Mapping[str, Any] | None) -> str:
     """Format patient metadata for inclusion in the model prompt."""
     patient_data = patient_data or {}
     photo_count = int(patient_data.get('photo_count') or 3)
-    helper_note = "- Фото 4: вид со спины (с помощником)" if photo_count >= 4 else ""
+    # Order must match the capture flow in state.js (stepLabels)
+    helper_note = "- Фото 4: вид со спины" if photo_count >= 4 else ""
     lines = [
         "Анкетные данные пациента:",
         f"- Возраст: {patient_data.get('age', 'не указан')}",
@@ -72,9 +65,9 @@ def _build_patient_block(patient_data: Mapping[str, Any] | None) -> str:
         f"- Пол: {patient_data.get('gender', 'не указан')}",
         "",
         "Входные фотографии:",
-        "- Фото 1: профиль слева",
-        "- Фото 2: профиль справа",
-        "- Фото 3: фронтальный или задний вид",
+        "- Фото 1: вид спереди",
+        "- Фото 2: левый бок (пациент стоит к камере левым боком)",
+        "- Фото 3: правый бок (пациент стоит к камере правым боком)",
         helper_note,
     ]
     return "\n".join(line for line in lines if line)
@@ -211,34 +204,12 @@ def analyze_posture_gemini(images: Sequence[str], patient_data: Mapping[str, Any
     analysis_patient_data = dict(patient_data or {})
     analysis_patient_data["photo_count"] = photo_count
     request_text = _build_request_text(analysis_patient_data, exercises_text)
-    # Build multimodal `Content` (preferred) if `types` is available; otherwise
-    # fall back to embedding images as base64 data URLs in a single text prompt.
-    # Only use multimodal parts when the imported `types` exposes the
-    # expected classes (`Part` and `Content`). Some SDK builds expose a
-    # `types` module without these helpers, so check for them explicitly.
-    content_parts = None
-    prompt = ""
-    if types is not None and hasattr(types, "Part") and hasattr(types, "Content"):
-        content_parts = [
-            types.Part.from_text(text=request_text),
-        ]
-
-        for image_base64 in images[:photo_count]:
-            encoded_image = image_base64.split(",", 1)[1] if "," in image_base64 else image_base64
-            content_parts.append(
-                types.Part.from_bytes(
-                    data=base64.b64decode(encoded_image),
-                    mime_type="image/jpeg",
-                )
-            )
-        use_multimodal = True
-    else:
-        prompt_parts = [request_text]
-        for idx, image_base64 in enumerate(images[:photo_count], start=1):
-            encoded_image = image_base64.split(",", 1)[1] if "," in image_base64 else image_base64
-            prompt_parts.append(f"---\nPhoto {idx} (base64):\ndata:image/jpeg;base64,{encoded_image}\n")
-        prompt = "\n\n".join(prompt_parts)
-        use_multimodal = False
+    # Images must go to the model as image parts. (Previously they were pasted
+    # into the prompt as base64 text, which the model cannot see.)
+    content_parts = [request_text]
+    for image_base64 in images[:photo_count]:
+        encoded_image = image_base64.split(",", 1)[1] if "," in image_base64 else image_base64
+        content_parts.append(Part.from_data(data=base64.b64decode(encoded_image), mime_type="image/jpeg"))
 
     # Try each model in the chain, with retry on 503
     last_error = None
@@ -246,12 +217,7 @@ def analyze_posture_gemini(images: Sequence[str], patient_data: Mapping[str, Any
         for attempt in range(3):  # Up to 3 retries per model
             try:
                 model_obj = GenerativeModel(model)
-                if types is not None and use_multimodal:
-                    response = model_obj.generate_content(
-                        contents=types.Content(role="user", parts=content_parts),
-                    )
-                else:
-                    response = model_obj.generate_content(prompt)
+                response = model_obj.generate_content(content_parts)
                 raw_text = response.text or ""
                 parsed = json.loads(_strip_json_fences(raw_text))
                 if not isinstance(parsed, dict):
@@ -268,6 +234,7 @@ def analyze_posture_gemini(images: Sequence[str], patient_data: Mapping[str, Any
                     time.sleep(wait_time)
                 else:
                     # Other errors don't benefit from retry on same model
+                    print(f"Model {model} failed, trying next: {type(e).__name__}: {e}")
                     break
     
     # If we get here, all models and attempts failed
