@@ -1,7 +1,7 @@
-import { attachFormValidation, validateForm, setFieldError } from './form.js?v=21';
-import { startCamera, switchCameraFacing } from './camera.js?v=21';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=22';
-import { state, stepLabels } from './state.js?v=21';
+import { attachFormValidation, validateForm, setFieldError } from './form.js?v=24';
+import { startCamera, switchCameraFacing } from './camera.js?v=24';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=24';
+import { state, stepLabels } from './state.js?v=24';
 
 /** Escape user-supplied text before inserting it into an innerHTML template. */
 function escapeHtml(value) {
@@ -406,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStepIndicator();
 
         state.maxSteps = 4; // Force 4 photos
+        state.mirrorMode = false; // specialist photographs the client directly
 
         document.getElementById('profile-screen').style.display = 'none';
         document.getElementById('form-screen').style.display = 'flex';
@@ -450,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.sessionId = sessionStorage.getItem('posture_app_session_id') || sessionId;
         state.analysisId = null; // Reset so a new draft is created for this client
         state.maxSteps = 4; // Force 4 photos
+        state.mirrorMode = false; // specialist photographs the client directly
     });
 
     document.getElementById('cancel-client-btn').addEventListener('click', () => {

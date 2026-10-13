@@ -1,7 +1,7 @@
-import { state, stepLabels } from './state.js?v=21';
-import { sendPhotosToServer } from './upload.js?v=22';
-import { getFigureStatus } from './detector.js?v=21';
-import { bindTimerButton, handleCaptureWithTimer } from './timer.js?v=21';
+import { state, stepLabels, isFrameMirrored } from './state.js?v=24';
+import { sendPhotosToServer } from './upload.js?v=24';
+import { getFigureStatus } from './detector.js?v=24';
+import { bindTimerButton, handleCaptureWithTimer } from './timer.js?v=24';
 /**
  * Updates the visible step label for the capture flow.
  * @returns {void}
@@ -53,7 +53,10 @@ function captureFrameToPreview() {
 
     const useDigitalZoom = !state.zoomSupport && state.cameraZoom > 1.01;
 
-    if (state.currentFacing === 'user') {
+    // The server must always receive a true (non-mirrored) photo, otherwise left
+    // and right are swapped in the analysis. Camera frames are already true,
+    // except when the rear camera films a mirror: flip those back.
+    if (isFrameMirrored()) {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
     }
@@ -127,7 +130,8 @@ function captureFrameToPreview() {
 
     // Store orientation precisely at capture time
     state.pendingPitchDeg = state.currentPitchDeg;
-    state.pendingRollDeg = state.currentRollDeg;
+    // A horizontal flip reverses the sign of roll (server uses it to unwarp the photo)
+    state.pendingRollDeg = isFrameMirrored() ? -state.currentRollDeg : state.currentRollDeg;
 
     updateNextButton();
 }

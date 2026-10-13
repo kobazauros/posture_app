@@ -33,6 +33,8 @@ export const state = {
     cameraGesturesBound: false,
     currentStep: 0,
     maxSteps: 3,
+    // true = client photographs their reflection in a mirror ("Съемка со стороны" off)
+    mirrorMode: false,
     finalPhotos: [],
     finalOrientations: [],
     redirectTimer: null,
@@ -63,6 +65,16 @@ export const state = {
     currentCountdown: 0,
     isLevel: false,
 };
+
+/**
+ * Whether camera frames are a mirror image of the scene.
+ * getUserMedia frames are never mirrored by the browser (front or rear camera);
+ * they are mirrored only when the rear camera films the client's reflection.
+ * @returns {boolean}
+ */
+export function isFrameMirrored() {
+    return state.mirrorMode && state.currentFacing === 'environment';
+}
 
 /**
  * Labels shown for the capture flow step indicator.

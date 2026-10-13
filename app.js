@@ -1,13 +1,13 @@
 /**
  * Application bootstrap that wires together auth, form, camera, and capture modules.
  */
-import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=21';
-import { attachFormValidation, validateForm } from './form.js?v=21';
-import { startCamera, switchCameraFacing } from './camera.js?v=21';
-import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=22';
-import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=21';
-import { initDetector } from './detector.js?v=21';
-import { closeOrRedirect } from './upload.js?v=22';
+import { bootstrapAuthFromUrl, getOrCreateClientId, initializeAuthSession } from './auth.js?v=24';
+import { attachFormValidation, validateForm } from './form.js?v=24';
+import { startCamera, switchCameraFacing } from './camera.js?v=24';
+import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=24';
+import { TELEGRAM_BOT_USERNAME, state, stepLabels } from './state.js?v=24';
+import { initDetector } from './detector.js?v=24';
+import { closeOrRedirect } from './upload.js?v=24';
 
 
 bootstrapAuthFromUrl();
@@ -332,6 +332,8 @@ async function handleToCameraClick() {
 
     const hasHelper = document.getElementById('has-helper');
     state.maxSteps = hasHelper && hasHelper.checked ? 4 : 3;
+    // "Съемка со стороны" off means the client shoots their reflection in a mirror (see manual)
+    state.mirrorMode = !(hasHelper && hasHelper.checked);
     state.currentStep = 0;
     state.finalPhotos = [];
     resetCaptureFlow();

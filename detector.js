@@ -6,7 +6,7 @@
  * The detection loop handles: face blur overlay, figure bounds checking,
  * guide-line flashing, and capture button coordination.
  */
-import { state } from './state.js?v=21';
+import { state, isFrameMirrored } from './state.js?v=24';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -209,26 +209,21 @@ function evaluateCurrentPose(landmarks) {
                 message = 'Повернитесь к камере фронтально.';
             }
             break;
+        // Side views: in a true (non-mirrored) frame a person standing LEFT side to the
+        // camera looks toward the left edge of the frame (nose left of both ears).
+        // This holds for front and rear cameras alike; only a mirror reverses it.
         case 1: // left side
+        case 2: { // right side
             if (leftEar && rightEar && landmarks[LM.NOSE]) {
-                if (state.currentFacing === 'user') {
-                    if (leftEar.x > noseX && rightEar.x > noseX) valid = true;
-                } else {
-                    if (leftEar.x < noseX && rightEar.x < noseX) valid = true;
-                }
+                const lookingLeft = leftEar.x > noseX && rightEar.x > noseX;
+                const lookingRight = leftEar.x < noseX && rightEar.x < noseX;
+                const wantLeftSide = step === 1;
+                const wantLookLeft = wantLeftSide !== isFrameMirrored();
+                valid = wantLookLeft ? lookingLeft : lookingRight;
             }
-            if (!valid) message = 'Повернитесь к камере левым боком.';
+            if (!valid) message = step === 1 ? 'Повернитесь к камере левым боком.' : 'Повернитесь к камере правым боком.';
             break;
-        case 2: // right side
-            if (leftEar && rightEar && landmarks[LM.NOSE]) {
-                if (state.currentFacing === 'user') {
-                    if (leftEar.x < noseX && rightEar.x < noseX) valid = true;
-                } else {
-                    if (leftEar.x > noseX && rightEar.x > noseX) valid = true;
-                }
-            }
-            if (!valid) message = 'Повернитесь к камере правым боком.';
-            break;
+        }
         case 3: // rear view
             if (leftEar && rightEar && landmarks[LM.NOSE] && leftEar.x < noseX && noseX < rightEar.x) {
                 valid = true;
