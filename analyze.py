@@ -15,8 +15,8 @@ from typing import Any, Mapping, Sequence
 
 
 # Primary and fallback models to try in order
+# gemini-2.5-pro is not available to this project in VERTEX_LOCATION (asia-southeast1)
 MODEL_CHAIN = [
-    "gemini-2.5-pro",
     "gemini-2.5-flash",
 ]
 BASE_DIR = Path(__file__).resolve().parent
