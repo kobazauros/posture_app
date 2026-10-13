@@ -3,6 +3,16 @@ import { startCamera, switchCameraFacing } from './camera.js?v=21';
 import { bindCaptureHandlers, resetCaptureFlow, updateStepIndicator } from './capture.js?v=22';
 import { state, stepLabels } from './state.js?v=21';
 
+/** Escape user-supplied text before inserting it into an innerHTML template. */
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const sessionId = sessionStorage.getItem('posture_app_session_id');
     const userRole = sessionStorage.getItem('posture_app_role');
@@ -241,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let descText = '';
         if (item.age || item.gender) {
-            descText += `${item.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${item.age || '?'} лет. `;
+            descText += `${item.gender === 'male' ? 'Мужчина' : 'Женщина'}, ${escapeHtml(item.age || '?')} лет. `;
         }
         if (isReturning) {
             descText += `Повторный анализ (всего: ${totalAnalyses}).`;
@@ -252,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         div.innerHTML = `
             <div class="card-content-wrapper" style="width: 100%;">
                 <div class="client-header">
-                    <h3 class="plan-title">${fullName}</h3>
+                    <h3 class="plan-title">${escapeHtml(fullName)}</h3>
                     ${statusHtml}
                 </div>
                 <p class="plan-desc">${descText}</p>
