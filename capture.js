@@ -69,24 +69,13 @@ function captureFrameToPreview() {
         }
     };
 
-    // Photo for the server (UNBLURRED, for backend MediaPipe): it must always be a
-    // true (non-mirrored) image, otherwise left and right are swapped in the
-    // analysis. Camera frames are already true, except when the rear camera films
-    // a mirror: flip those back. The preview below keeps what the user saw live.
-    const uploadCanvas = document.createElement('canvas');
-    uploadCanvas.width = canvas.width;
-    uploadCanvas.height = canvas.height;
-    const uploadCtx = uploadCanvas.getContext('2d');
-    if (isFrameMirrored()) {
-        uploadCtx.translate(uploadCanvas.width, 0);
-        uploadCtx.scale(-1, 1);
-    }
-    drawFrame(uploadCtx);
-    state.pendingUnblurredPhoto = uploadCanvas.toDataURL('image/jpeg', 0.8);
-
-    // Preview: identical to the live camera view on screen, for any camera.
-    // The live <video> is never mirrored by the app, so neither is the preview.
+    // The photo is kept exactly as shot and as shown on screen (never flipped):
+    // the report shows what the user photographed. If it was shot in a mirror,
+    // the server flips a copy for analysis, see `pendingMirrored` below.
     drawFrame(ctx);
+
+    // Save UNBLURRED frame to state for backend MediaPipe
+    state.pendingUnblurredPhoto = canvas.toDataURL('image/jpeg', 0.8);
 
     // --- ПРИМЕНЯЕМ РАЗМЫТИЕ ЛИЦА ТОЛЬКО ДЛЯ ПРЕВЬЮ ---
     const status = getFigureStatus();
@@ -140,8 +129,9 @@ function captureFrameToPreview() {
 
     // Store orientation precisely at capture time
     state.pendingPitchDeg = state.currentPitchDeg;
-    // A horizontal flip reverses the sign of roll (server uses it to unwarp the photo)
-    state.pendingRollDeg = isFrameMirrored() ? -state.currentRollDeg : state.currentRollDeg;
+    state.pendingRollDeg = state.currentRollDeg;
+    // Mirror reflection filmed by the rear camera: left and right are swapped in this photo
+    state.pendingMirrored = isFrameMirrored();
 
     updateNextButton();
 }
@@ -175,7 +165,7 @@ export function bindCaptureHandlers() {
             const previewImage = document.getElementById('preview-image');
             if (previewImage && state.pendingUnblurredPhoto) {
                 state.finalPhotos.push(state.pendingUnblurredPhoto);
-                state.finalOrientations.push({ pitch: state.pendingPitchDeg, roll: state.pendingRollDeg });
+                state.finalOrientations.push({ pitch: state.pendingPitchDeg, roll: state.pendingRollDeg, mirrored: state.pendingMirrored });
             }
 
             if (state.currentStep < state.maxSteps - 1) {

@@ -62,6 +62,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 RESULTS_FOLDER = os.path.join(BASE_DIR, 'results')
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
+
+def _flip_jpeg_to_data_url(img_data):
+    """Return a horizontally flipped copy of JPEG bytes as a data URL."""
+    from io import BytesIO
+    from PIL import Image, ImageOps
+    out = BytesIO()
+    ImageOps.mirror(Image.open(BytesIO(img_data)).convert('RGB')).save(out, format='JPEG', quality=90)
+    return "data:image/jpeg;base64," + base64.b64encode(out.getvalue()).decode('utf-8')
+
 # Раздача фронтенда
 @app.route('/')
 def index():
@@ -222,6 +231,14 @@ def upload():
         specialist_first = ''
         specialist_last = ''
 
+    # Photos shot as a mirror reflection (client, rear camera) have left and right
+    # swapped. They are stored and shown in the report as shot; only the copy sent
+    # to the model is flipped back, so the analysis sees a true image.
+    mirrored_flags = [
+        bool(orientations[i].get('mirrored')) if i < len(orientations) and isinstance(orientations[i], dict) else False
+        for i in range(len(images))
+    ]
+
     info_filename = f"{uid}_{ts}_data.txt"
     analysis_result = None
     analysis_error = None
@@ -238,11 +255,13 @@ def upload():
             f.write(f"Weight: {info.get('weight', '')}\n")
             f.write(f"Height: {info.get('height', '')}\n")
             f.write(f"Gender: {info.get('gender', '')}\n")
+            f.write(f"Mirrored: {any(mirrored_flags)}\n")
     except Exception as e:
         print(f"Ошибка при записи текстового файла: {e}")
     
     # 2. Сохраняем фотографии в .jpg
     saved_photos = []
+    analysis_images = []
     for i, img_base64 in enumerate(images):
         try:
             if "," in img_base64:
@@ -297,7 +316,7 @@ def upload():
                             
                         # Изображение уже выровнено, поэтому pitch=0, roll=0. 
                         # Сохраним оригинальные углы для отладки.
-                        data_json = json.dumps({"pitch": 0.0, "roll": 0.0, "original_pitch": pitch, "original_roll": roll})
+                        data_json = json.dumps({"pitch": 0.0, "roll": 0.0, "original_pitch": pitch, "original_roll": roll, "mirrored": mirrored_flags[i]})
                         user_comment = b"ASCII\0\0\0" + data_json.encode('utf-8')
                         exif_dict["Exif"][piexif.ExifIFD.UserComment] = user_comment  # type: ignore
                         exif_bytes = piexif.dump(exif_dict)
@@ -307,6 +326,7 @@ def upload():
                 except Exception as e:
                     logger.warning("Failed to save EXIF orientation: %s", e)
             saved_photos.append(filename)
+            analysis_images.append(_flip_jpeg_to_data_url(img_data) if mirrored_flags[i] else images[i])
         except Exception as e:
             print(f"Ошибка при сохранении изображения {i}: {e}")
 
@@ -324,7 +344,7 @@ def upload():
     analysis_error = None
     pdf_report = None
     try:
-        analysis_result = analyze_posture_gemini(images=images, patient_data=info)
+        analysis_result = analyze_posture_gemini(images=analysis_images, patient_data=info)
         analysis_filename = f"{uid}_{ts}_analysis.json"
         logger.info('Analysis completed for user_id=%s', uid)
 

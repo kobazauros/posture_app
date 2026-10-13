@@ -294,6 +294,13 @@ def generate_pdf_from_analysis(user_id, timestamp, output_filename=None):
     
     # Photos Section
     story.append(Paragraph("Фотографии анализа", heading_style))
+    if patient_data.get('Mirrored', 'False') == 'True':
+        # Photos are shown as shot; the analysis itself was done on corrected copies
+        story.append(Paragraph(
+            "Фотографии сняты в зеркале и показаны так, как были сняты (зеркально). "
+            "Анализ и указания «левый/правый» в отчёте соответствуют реальным сторонам тела.",
+            body_style))
+        story.append(Spacer(1, 0.2*cm))
     
     photo_paths = [
         received_photos_dir / f'{user_id}_{timestamp}_photo_1.jpg',
