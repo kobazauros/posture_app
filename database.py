@@ -465,48 +465,78 @@ def get_premium_pool(limit=20, offset=0):
         conn.close()
 
 def assign_analysis(analysis_id, specialist_id):
+    """
+    Assign an analysis from the premium pool to a specialist.
+    Returns True if assigned, False if it is not an unassigned pool item, None on DB error.
+    """
     conn = get_db_connection()
-    if not conn: return False
+    if not conn: return None
     try:
         with conn.cursor() as cur:
+            # Only unassigned, submitted premium analyses can be taken; the
+            # specialist_id IS NULL check also prevents taking over someone else's.
             cur.execute(
-                "UPDATE public.posture_analyses SET specialist_id = %s WHERE id = %s",
+                """
+                UPDATE public.posture_analyses SET specialist_id = %s
+                WHERE id = %s
+                  AND specialist_id IS NULL
+                  AND analysis_type = 'premium'
+                  AND status != 'draft'
+                """,
                 (specialist_id, analysis_id)
             )
+            assigned = cur.rowcount == 1
             conn.commit()
-            return True
+            return assigned
     except Exception as e:
         logger.error(f"Error assigning analysis: {e}")
         conn.rollback()
-        return False
+        return None
     finally:
         conn.close()
 
-def update_recommendations(analysis_id, recommendations):
+def update_recommendations(analysis_id, recommendations, specialist_id):
+    """
+    Replace recommendations in an analysis owned by this specialist
+    (assigned to them, or their own offline analysis).
+    Returns True if updated, False if not found / not theirs / no result yet, None on DB error.
+    """
     conn = get_db_connection()
-    if not conn: return False
+    if not conn: return None
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT analysis_result FROM public.posture_analyses WHERE id = %s", (analysis_id,))
+            cur.execute(
+                """
+                SELECT analysis_result FROM public.posture_analyses
+                WHERE id = %s
+                  AND (
+                      specialist_id = %s
+                      OR (author_id = %s AND (patient_first_name IS NOT NULL OR patient_last_name IS NOT NULL))
+                  )
+                FOR UPDATE
+                """,
+                (analysis_id, specialist_id, specialist_id)
+            )
             res = cur.fetchone()
-            if not res or not res[0]: return False
-            
-            result_json = res[0]
+            # RealDictCursor: rows are dicts keyed by column name
+            result_json = res['analysis_result'] if res else None
+            if not result_json:
+                return False
             if isinstance(result_json, str):
                 result_json = json.loads(result_json)
-                
+
             result_json['recommendations'] = recommendations
-            
+
             cur.execute(
                 "UPDATE public.posture_analyses SET analysis_result = %s WHERE id = %s",
-                (json.dumps(result_json) if isinstance(res[0], str) else result_json, analysis_id)
+                (json.dumps(result_json), analysis_id)
             )
             conn.commit()
             return True
     except Exception as e:
         logger.error(f"Error updating recommendations: {e}")
         conn.rollback()
-        return False
+        return None
     finally:
         conn.close()
 

@@ -459,9 +459,11 @@ def api_assign_analysis(analysis_id):
     if not user or user.get('role') not in ['specialist-approved']:
         return jsonify({'error': 'Unauthorized'}), 401
         
-    success = database.assign_analysis(analysis_id, user['telegram_id'])
-    if success:
+    assigned = database.assign_analysis(analysis_id, user['telegram_id'])
+    if assigned:
         return jsonify({'success': True})
+    if assigned is False:
+        return jsonify({'error': 'Заявка уже взята другим специалистом или недоступна'}), 409
     return jsonify({'error': 'Failed to assign analysis'}), 500
 
 @app.route('/api/specialist/analyses/<int:analysis_id>/recommendations', methods=['PUT'])
@@ -474,9 +476,11 @@ def api_update_recommendations(analysis_id):
     if not data or 'recommendations' not in data:
         return jsonify({'error': 'Missing recommendations'}), 400
         
-    success = database.update_recommendations(analysis_id, data['recommendations'])
-    if success:
+    updated = database.update_recommendations(analysis_id, data['recommendations'], user['telegram_id'])
+    if updated:
         return jsonify({'success': True})
+    if updated is False:
+        return jsonify({'error': 'Analysis not found or not assigned to you'}), 404
     return jsonify({'error': 'Failed to update recommendations'}), 500
 
 if __name__ == '__main__':
