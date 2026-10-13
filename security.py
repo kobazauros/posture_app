@@ -4,6 +4,7 @@ import os
 import time
 import base64
 import hashlib
+import hmac
 import json
 from threading import Lock
 from dotenv import load_dotenv
@@ -144,6 +145,18 @@ def register_token(user_id, token):
     save_session_registry(registry)
 
 
+def token_matches(entry, token):
+    """Return True only if `token` is exactly the token the bot issued for this entry.
+
+    Decoding a token is not proof of anything: the XOR scheme is forgeable,
+    so a token is trusted only when it matches the registered one.
+    """
+    issued = entry.get("token") if isinstance(entry, dict) else None
+    if not issued or not token:
+        return False
+    return hmac.compare_digest(str(issued), str(token))
+
+
 def claim_token(token, client_id=None):
     """Mark a token as claimed and create a new session id."""
     user_id, expires = decode_token(token)
@@ -152,7 +165,7 @@ def claim_token(token, client_id=None):
 
     registry = load_session_registry()
     entry = registry.get(user_id)
-    if not entry or entry.get("token") != token or entry.get("claimed"):
+    if not entry or not token_matches(entry, token) or entry.get("claimed"):
         return None, None
 
     session_id = base64.urlsafe_b64encode(os.urandom(24)).decode().rstrip("=")

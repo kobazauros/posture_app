@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
-from security import decode_token, claim_token, restore_session, load_session_registry, save_session_registry, close_session_by_session_id, close_session_by_client_id
+from security import decode_token, claim_token, restore_session, load_session_registry, save_session_registry, close_session_by_session_id, close_session_by_client_id, token_matches
 from database import get_user_by_telegram_id, register_user, get_latest_posture_analysis
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,9 @@ def claim_session():
     if user_id_decoded:
         registry = load_session_registry()
         entry = registry.get(user_id_decoded) if isinstance(registry, dict) else None
-        if isinstance(entry, dict) and entry.get('claimed') and entry.get('session_id'):
+        # Re-opening the same link returns the existing session, but only for the
+        # exact token the bot issued: a decodable token alone proves nothing.
+        if isinstance(entry, dict) and entry.get('claimed') and entry.get('session_id') and token_matches(entry, token):
             if client_id and entry.get('client_id') != client_id:
                 entry['client_id'] = client_id
                 for other_id, other_entry in list(registry.items()):
